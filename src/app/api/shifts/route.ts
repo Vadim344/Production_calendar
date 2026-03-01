@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentMember, isManagerOrAbove } from "@/lib/auth-helpers";
+import { emitToOrg, emitToSchedule } from "@/lib/emit";
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -137,6 +138,18 @@ export async function POST(request: NextRequest) {
       })
     )
   );
+
+  // Broadcast real-time update
+  emitToOrg(member.organizationId, "schedule:updated", {
+    scheduleId: data.scheduleId,
+    action: "shift_created",
+    shiftIds: shifts.map((s) => s.id),
+  });
+  emitToSchedule(data.scheduleId, "schedule:updated", {
+    scheduleId: data.scheduleId,
+    action: "shift_created",
+    shiftIds: shifts.map((s) => s.id),
+  });
 
   return NextResponse.json({ shifts }, { status: 201 });
 }

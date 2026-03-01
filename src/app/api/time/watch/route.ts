@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentMember } from "@/lib/auth-helpers";
+import { emitToOrg } from "@/lib/emit";
 import { format } from "date-fns";
 
 const watchActionSchema = z.object({
@@ -93,6 +94,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Broadcast real-time update
+    emitToOrg(member.organizationId, "time:watch", {
+      userId: member.user.id,
+      action: "started",
+      recordId: record.id,
+    });
+
     return NextResponse.json({ record }, { status: 201 });
   }
 
@@ -123,6 +131,13 @@ export async function POST(request: NextRequest) {
     include: {
       category: { select: { id: true, name: true } },
     },
+  });
+
+  // Broadcast real-time update
+  emitToOrg(member.organizationId, "time:watch", {
+    userId: member.user.id,
+    action: "stopped",
+    recordId: updated.id,
   });
 
   return NextResponse.json({ record: updated });

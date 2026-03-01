@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentMember, isManagerOrAbove } from "@/lib/auth-helpers";
+import { emitToOrg, emitToSchedule } from "@/lib/emit";
 
 const TIME_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -120,6 +121,18 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     },
   });
 
+  // Broadcast real-time update
+  emitToOrg(member.organizationId, "schedule:updated", {
+    scheduleId: existing.scheduleId,
+    action: "shift_updated",
+    shiftId: id,
+  });
+  emitToSchedule(existing.scheduleId, "schedule:updated", {
+    scheduleId: existing.scheduleId,
+    action: "shift_updated",
+    shiftId: id,
+  });
+
   return NextResponse.json({ shift });
 }
 
@@ -163,6 +176,18 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
       data: { deletedAt: new Date() },
     }),
   ]);
+
+  // Broadcast real-time update
+  emitToOrg(member.organizationId, "schedule:updated", {
+    scheduleId: existing.scheduleId,
+    action: "shift_deleted",
+    shiftId: id,
+  });
+  emitToSchedule(existing.scheduleId, "schedule:updated", {
+    scheduleId: existing.scheduleId,
+    action: "shift_deleted",
+    shiftId: id,
+  });
 
   return NextResponse.json({ success: true });
 }

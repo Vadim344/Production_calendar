@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentMember } from "@/lib/auth-helpers";
+import { emitToOrg } from "@/lib/emit";
 
 // GET /api/messages?folder=inbox|sent|trash
 export async function GET(request: NextRequest) {
@@ -159,6 +160,14 @@ export async function POST(request: NextRequest) {
         },
       },
     },
+  });
+
+  // Broadcast real-time notification to org members
+  emitToOrg(member.organizationId, "message:new", {
+    messageId: message.id,
+    senderId: member.user.id,
+    recipientIds: validIds,
+    subject,
   });
 
   return NextResponse.json({ message }, { status: 201 });

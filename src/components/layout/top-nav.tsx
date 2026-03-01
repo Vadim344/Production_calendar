@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { UserMenu } from "./user-menu";
 import { MobileNav } from "./mobile-nav";
+import { ConnectionStatus } from "./connection-status";
 
 const navItems = [
   { key: "schedule", icon: CalendarDays, href: "/schedule/flexible", label: "Schichtplaene" },
@@ -104,6 +105,7 @@ export function TopNav() {
             <span className="hidden lg:inline">KI</span>
           </Link>
 
+          <ConnectionStatus />
           <UserMenu />
         </div>
       </div>

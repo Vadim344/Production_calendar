@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getCurrentMember, isManagerOrAbove } from "@/lib/auth-helpers";
+import { emitToOrg, emitToSchedule } from "@/lib/emit";
 
 const bookingSchema = z.object({
   shiftId: z.string().min(1),
@@ -114,6 +115,20 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // Broadcast real-time update
+  emitToOrg(member.organizationId, "booking:changed", {
+    scheduleId: shift.scheduleId,
+    shiftId,
+    userId,
+    action: "booked",
+  });
+  emitToSchedule(shift.scheduleId, "booking:changed", {
+    scheduleId: shift.scheduleId,
+    shiftId,
+    userId,
+    action: "booked",
+  });
+
   return NextResponse.json({ booking }, { status: 201 });
 }
 
@@ -183,6 +198,20 @@ export async function DELETE(request: NextRequest) {
 
   await db.booking.delete({
     where: { id: booking.id },
+  });
+
+  // Broadcast real-time update
+  emitToOrg(member.organizationId, "booking:changed", {
+    scheduleId: shift.scheduleId,
+    shiftId,
+    userId,
+    action: "unbooked",
+  });
+  emitToSchedule(shift.scheduleId, "booking:changed", {
+    scheduleId: shift.scheduleId,
+    shiftId,
+    userId,
+    action: "unbooked",
   });
 
   return NextResponse.json({ success: true });
