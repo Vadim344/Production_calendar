@@ -21,6 +21,7 @@ import {
   SheetDescription,
   SheetFooter,
 } from "@/components/ui/sheet";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 // ─── Types ──────────────────────────────────────────────────────────
@@ -46,16 +47,17 @@ function scoreColor(score: number): string {
   return "bg-red-100 text-red-800 border-red-200";
 }
 
-function scoreLabel(score: number): string {
-  if (score >= 80) return "Sehr gut";
-  if (score >= 60) return "Gut";
-  if (score >= 40) return "Mittel";
-  return "Niedrig";
+function scoreLabel(score: number, t: (key: string) => string): string {
+  if (score >= 80) return t("scoreVeryGood");
+  if (score >= 60) return t("scoreGood");
+  if (score >= 40) return t("scoreMedium");
+  return t("scoreLow");
 }
 
 // ─── Main component ─────────────────────────────────────────────────
 
 export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
+  const t = useTranslations("schedule");
   const queryClient = useQueryClient();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -74,7 +76,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "KI-Vorschlag fehlgeschlagen");
+        throw new Error(data.error || t("suggestError"));
       }
 
       return res.json() as Promise<{ suggestions: Suggestion[] }>;
@@ -85,11 +87,11 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
       setDeclinedIds(new Set());
 
       if (data.suggestions.length === 0) {
-        toast.info("Keine Vorschlaege: Alle Schichten sind bereits besetzt.");
+        toast.info(t("noSuggestions"));
       } else {
         setSheetOpen(true);
         toast.success(
-          `${data.suggestions.length} KI-Vorschlaege generiert`
+          `{t("suggestionsGenerated", { count: data.suggestions.length })}`
         );
       }
     },
@@ -113,7 +115,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Buchung fehlgeschlagen");
+        throw new Error(data.error || t("bookingError"));
       }
 
       return suggestion;
@@ -121,7 +123,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
     onSuccess: (suggestion) => {
       setAcceptedIds((prev) => new Set([...prev, suggestionKey(suggestion)]));
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
-      toast.success(`${suggestion.employeeName} gebucht`);
+      toast.success(t("employeeBookedInline", { name: suggestion.employeeName }));
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -163,10 +165,10 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
       }
       setAcceptedIds(newAccepted);
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
-      toast.success(`${accepted.length} Vorschlaege uebernommen`);
+      toast.success(t("suggestionsAccepted", { count: accepted.length }));
     },
     onError: () => {
-      toast.error("Fehler beim Uebernehmen der Vorschlaege");
+      toast.error(t("acceptAllError"));
     },
   });
 
@@ -208,7 +210,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
         ) : (
           <Sparkles className="size-3.5" />
         )}
-        KI-Vorschlag
+        {t("aiSuggest")}
       </Button>
 
       {/* Suggestions Sheet */}
@@ -217,13 +219,13 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Sparkles className="size-4 text-violet-500" />
-              KI-Vorschlaege
+              {t("aiSuggestions")}
             </SheetTitle>
             <SheetDescription>
-              {suggestions.length} Vorschlaege generiert.{" "}
+              {t("suggestionsCount", { count: suggestions.length })}{" "}
               {pendingCount > 0
-                ? `${pendingCount} ausstehend.`
-                : "Alle bearbeitet."}
+                ? t("pendingCount", { count: pendingCount })
+                : t("allProcessed")}
             </SheetDescription>
           </SheetHeader>
 
@@ -232,7 +234,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
             {suggestions.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <AlertTriangle className="size-8 mb-2" />
-                <p className="text-sm">Keine Vorschlaege verfuegbar.</p>
+                <p className="text-sm">{t("noSuggestionsAvailable")}</p>
               </div>
             )}
 
@@ -280,7 +282,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
                         scoreColor(suggestion.score)
                       )}
                     >
-                      {suggestion.score} - {scoreLabel(suggestion.score)}
+                      {suggestion.score} - {scoreLabel(suggestion.score, t)}
                     </Badge>
                   </div>
 
@@ -293,12 +295,12 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
                   {isAccepted ? (
                     <div className="flex items-center gap-1.5 text-xs text-green-600">
                       <Check className="size-3.5" />
-                      Uebernommen
+                      {t("accepted")}
                     </div>
                   ) : isDeclined ? (
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <X className="size-3.5" />
-                      Abgelehnt
+                      {t("rejected")}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
@@ -310,7 +312,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
                         disabled={isProcessing}
                       >
                         <Check className="size-3" />
-                        Akzeptieren
+                        {t("accept")}
                       </Button>
                       <Button
                         variant="ghost"
@@ -320,7 +322,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
                         disabled={isProcessing}
                       >
                         <X className="size-3" />
-                        Ablehnen
+                        {t("decline")}
                       </Button>
                     </div>
                   )}
@@ -344,7 +346,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
                 ) : (
                   <CheckCheck className="size-3.5" />
                 )}
-                Alle akzeptieren ({pendingCount})
+                {t("acceptAllWithCount", { count: pendingCount })}
               </Button>
             )}
             <Button
@@ -353,7 +355,7 @@ export function AISuggestButton({ scheduleId }: AISuggestButtonProps) {
               onClick={() => setSheetOpen(false)}
               className="ml-auto"
             >
-              Schliessen
+              {t("close")}
             </Button>
           </SheetFooter>
         </SheetContent>

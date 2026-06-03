@@ -2,7 +2,8 @@
 
 import { signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+import { LogOut, Moon, Sun, Languages } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,15 +15,25 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useCurrentMember } from "@/lib/hooks/use-current-member";
+import { routing } from "@/i18n/routing";
 
 export function UserMenu() {
   const { data: member } = useCurrentMember();
   const { theme, setTheme } = useTheme();
+  const locale = useLocale();
+  const t = useTranslations("auth");
+  const tc = useTranslations("common");
+  const tl = useTranslations("locales");
 
   const firstName = member?.user.firstName ?? "";
   const lastName = member?.user.lastName ?? "";
   const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   const fullName = `${firstName} ${lastName}`.trim();
+
+  function switchLang(newLocale: string) {
+    document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
+    window.location.reload();
+  }
 
   return (
     <DropdownMenu>
@@ -40,7 +51,7 @@ export function UserMenu() {
             </AvatarFallback>
           </Avatar>
           <span className="hidden text-sm font-medium lg:inline">
-            {fullName || "Laden..."}
+            {fullName || tc("loading")}
           </span>
         </Button>
       </DropdownMenuTrigger>
@@ -61,6 +72,22 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {/* Language switcher */}
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground px-2 py-1">
+          {tc("language")}
+        </DropdownMenuLabel>
+        {routing.locales.map((l) => (
+          <DropdownMenuItem
+            key={l}
+            onClick={() => switchLang(l)}
+            className={l === locale ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300" : ""}
+          >
+            <Languages className="mr-2 size-4" />
+            {tl(l)}
+            {l === locale && <span className="ml-auto text-xs">✓</span>}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
         >
@@ -77,7 +104,7 @@ export function UserMenu() {
           variant="destructive"
         >
           <LogOut className="mr-2 size-4" />
-          Abmelden
+          {t("logout")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

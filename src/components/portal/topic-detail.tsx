@@ -1,10 +1,11 @@
 "use client";
+import { useLocale } from "next-intl";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import {
   ArrowLeft,
   Send,
@@ -45,6 +46,7 @@ interface Props {
 }
 
 export function TopicDetail({ topicId }: Props) {
+  const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [text, setText] = useState("");
@@ -139,7 +141,7 @@ export function TopicDetail({ topicId }: Props) {
                 </span>
               )}
               <span>
-                am {format(new Date(topic.createdAt), "dd. MMMM yyyy", { locale: de })}
+                am {format(new Date(topic.createdAt), "dd. MMMM yyyy", { locale: getDateLocale(locale) })}
               </span>
             </div>
           </div>
@@ -174,7 +176,7 @@ export function TopicDetail({ topicId }: Props) {
                       {post.user.firstName} {post.user.lastName}
                     </span>
                     <time className="text-xs text-slate-400">
-                      {format(new Date(post.createdAt), "dd. MMM yyyy, HH:mm", { locale: de })}
+                      {format(new Date(post.createdAt), "dd. MMM yyyy, HH:mm", { locale: getDateLocale(locale) })}
                     </time>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">

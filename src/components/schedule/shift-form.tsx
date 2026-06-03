@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,8 @@ export function ShiftForm({
   defaultDayOfWeek = 1,
   shift,
 }: ShiftFormProps) {
+  const t = useTranslations("schedule");
+  const tc = useTranslations("common");
   const isEdit = !!shift;
   const queryClient = useQueryClient();
 
@@ -139,15 +142,15 @@ export function ShiftForm({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Erstellen");
+        throw new Error(data.error || t("saveError"));
       }
       return res.json();
     },
     onSuccess: () => {
       toast.success(
         repeatDays.length > 1
-          ? `${repeatDays.length} Schichten erstellt`
-          : "Schicht erstellt"
+          ? t("createdShifts", { count: repeatDays.length })
+          : t("shiftCreated")
       );
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
       onOpenChange(false);
@@ -178,12 +181,12 @@ export function ShiftForm({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Speichern");
+        throw new Error(data.error || t("saveError"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Schicht aktualisiert");
+      toast.success(t("shiftUpdated"));
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
       onOpenChange(false);
     },
@@ -201,12 +204,12 @@ export function ShiftForm({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Loeschen");
+        throw new Error(data.error || t("deleteError"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Schicht geloescht");
+      toast.success(t("shiftDeleted"));
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
       onOpenChange(false);
     },
@@ -223,11 +226,11 @@ export function ShiftForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (shiftFrom >= shiftTo) {
-      toast.error("Startzeit muss vor Endzeit liegen");
+      toast.error(t("startTimeBeforeEnd"));
       return;
     }
     if (!isEdit && repeatDays.length === 0) {
-      toast.error("Mindestens ein Tag muss ausgewaehlt sein");
+      toast.error(t("selectDay"));
       return;
     }
     if (isEdit) {
@@ -238,7 +241,7 @@ export function ShiftForm({
   }
 
   function handleDelete() {
-    if (confirm("Schicht wirklich loeschen? Alle Buchungen werden entfernt.")) {
+    if (confirm(t("deleteConfirm"))) {
       deleteMutation.mutate();
     }
   }
@@ -249,12 +252,12 @@ export function ShiftForm({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {isEdit ? "Schicht bearbeiten" : "Neue Schicht erstellen"}
+              {isEdit ? t("editShift") : t("createShift")}
             </DialogTitle>
             <DialogDescription>
               {isEdit
-                ? "Bearbeite die Details der Schicht."
-                : "Erstelle eine neue Schicht im Schichtplan."}
+                ? t("editDescription")
+                : t("createDescription")}
             </DialogDescription>
           </DialogHeader>
 
@@ -262,7 +265,7 @@ export function ShiftForm({
             {/* Time pickers */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="shift-from">Von</Label>
+                <Label htmlFor="shift-from">{t("from")}</Label>
                 <Input
                   id="shift-from"
                   type="time"
@@ -272,7 +275,7 @@ export function ShiftForm({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="shift-to">Bis</Label>
+                <Label htmlFor="shift-to">{t("to")}</Label>
                 <Input
                   id="shift-to"
                   type="time"
@@ -285,17 +288,17 @@ export function ShiftForm({
 
             {/* Division select */}
             <div className="space-y-1.5">
-              <Label>Arbeitsbereich</Label>
+              <Label>{t("workArea")}</Label>
               <Select
                 value={divisionId}
                 onValueChange={setDivisionId}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Kein Arbeitsbereich" />
+                  <SelectValue placeholder={t("noWorkArea")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">
-                    <span className="text-muted-foreground">Kein Arbeitsbereich</span>
+                    <span className="text-muted-foreground">{t("noWorkArea")}</span>
                   </SelectItem>
                   {divisions.map((div) => (
                     <SelectItem key={div.id} value={div.id}>
@@ -314,7 +317,7 @@ export function ShiftForm({
 
             {/* Max employees */}
             <div className="space-y-1.5">
-              <Label htmlFor="max-employees">Max. Mitarbeiter</Label>
+              <Label htmlFor="max-employees">{t("maxEmployees")}</Label>
               <Input
                 id="max-employees"
                 type="number"
@@ -328,19 +331,19 @@ export function ShiftForm({
 
             {/* Title */}
             <div className="space-y-1.5">
-              <Label htmlFor="shift-title">Titel (optional)</Label>
+              <Label htmlFor="shift-title">{t("title")}</Label>
               <Input
                 id="shift-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="z.B. Fruehschicht, Spaetschicht..."
+                placeholder={t("titlePlaceholder")}
                 maxLength={100}
               />
             </div>
 
             {/* Pause options */}
             <div className="space-y-1.5">
-              <Label>Pause</Label>
+              <Label>{t("pause")}</Label>
               <div className="flex items-center gap-3">
                 <Input
                   type="number"
@@ -349,9 +352,9 @@ export function ShiftForm({
                   value={pauseValue}
                   onChange={(e) => setPauseValue(parseInt(e.target.value, 10) || 0)}
                   className="w-20"
-                  placeholder="Min"
+                  placeholder={tc("minutes")}
                 />
-                <span className="text-sm text-muted-foreground">Minuten</span>
+                <span className="text-sm text-muted-foreground">{tc("minutes")}</span>
               </div>
               <div className="flex items-center gap-4 mt-1.5">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -362,7 +365,7 @@ export function ShiftForm({
                     onChange={() => setPauseOption("PER_HOUR")}
                     className="accent-primary"
                   />
-                  <span className="text-sm">Pro Stunde</span>
+                  <span className="text-sm">{t("perHour")}</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -372,7 +375,7 @@ export function ShiftForm({
                     onChange={() => setPauseOption("PER_SHIFT")}
                     className="accent-primary"
                   />
-                  <span className="text-sm">Pro Schicht</span>
+                  <span className="text-sm">{t("perShift")}</span>
                 </label>
               </div>
             </div>
@@ -380,7 +383,7 @@ export function ShiftForm({
             {/* Repeat days - only for CREATE mode */}
             {!isEdit && (
               <div className="space-y-1.5">
-                <Label>Tage wiederholen</Label>
+                <Label>{t("repeatDays")}</Label>
                 <div className="flex items-center gap-1.5">
                   {DAY_CHECKBOXES.map(({ day, label }) => (
                     <button
@@ -399,19 +402,19 @@ export function ShiftForm({
                   ))}
                 </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Die Schicht wird fuer alle ausgewaehlten Tage erstellt.
+                  {t("repeatInfo")}
                 </p>
               </div>
             )}
 
             {/* Description */}
             <div className="space-y-1.5">
-              <Label htmlFor="shift-description">Beschreibung (optional)</Label>
+              <Label htmlFor="shift-description">{t("description")}</Label>
               <Textarea
                 id="shift-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Zusaetzliche Hinweise..."
+                placeholder={t("descriptionPlaceholder")}
                 rows={2}
                 maxLength={500}
               />
@@ -434,7 +437,7 @@ export function ShiftForm({
                     ) : (
                       <Trash2 className="size-4" />
                     )}
-                    Loeschen
+                    {tc("delete")}
                   </Button>
                 )}
               </div>
@@ -445,13 +448,13 @@ export function ShiftForm({
                   onClick={() => onOpenChange(false)}
                   disabled={isPending}
                 >
-                  Abbrechen
+                  {tc("cancel")}
                 </Button>
                 <Button type="submit" disabled={isPending}>
                   {(createMutation.isPending || updateMutation.isPending) && (
                     <Loader2 className="size-4 animate-spin" />
                   )}
-                  {isEdit ? "Speichern" : "Erstellen"}
+                  {isEdit ? tc("save") : tc("create")}
                 </Button>
               </div>
             </div>

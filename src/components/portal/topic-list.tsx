@@ -1,10 +1,11 @@
 "use client";
+import { useLocale } from "next-intl";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import {
   MessageCircle,
   Plus,
@@ -38,6 +39,7 @@ interface TopicItem {
 }
 
 export function TopicList() {
+  const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
@@ -123,7 +125,7 @@ export function TopicList() {
                   )}
                   <span className="flex items-center gap-1">
                     <Clock className="size-3" />
-                    {format(new Date(topic.createdAt), "dd. MMM yyyy", { locale: de })}
+                    {format(new Date(topic.createdAt), "dd. MMM yyyy", { locale: getDateLocale(locale) })}
                   </span>
                 </div>
               </div>
@@ -138,7 +140,7 @@ export function TopicList() {
                     Letzte Aktivitaet
                   </div>
                   <div className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                    {format(new Date(topic.lastActivity), "dd. MMM yyyy, HH:mm", { locale: de })}
+                    {format(new Date(topic.lastActivity), "dd. MMM yyyy, HH:mm", { locale: getDateLocale(locale) })}
                   </div>
                 </div>
               </div>

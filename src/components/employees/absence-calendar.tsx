@@ -1,4 +1,6 @@
 "use client";
+import { useLocale } from "next-intl";
+import { getDateLocale } from "@/lib/date-locale";
 
 import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -19,7 +21,6 @@ import {
   startOfYear,
   endOfYear,
 } from "date-fns";
-import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -96,6 +97,7 @@ const DAY_NAMES_MIN = ["M", "D", "M", "D", "F", "S", "S"];
 // ---------- Component ----------
 
 export function AbsenceCalendar() {
+  const locale = useLocale();
   const [year, setYear] = useState(new Date().getFullYear());
   const [showForm, setShowForm] = useState(false);
   const [selectedDateFrom, setSelectedDateFrom] = useState<string>("");
@@ -286,7 +288,7 @@ function MonthGrid({
   // We want Mon=0, so: (firstDayOfWeek + 6) % 7
   const offset = (firstDayOfWeek + 6) % 7;
 
-  const monthLabel = format(monthDate, "MMMM", { locale: de });
+  const monthLabel = format(monthDate, "MMMM", { locale: getDateLocale(locale) });
 
   return (
     <Card className="p-3">

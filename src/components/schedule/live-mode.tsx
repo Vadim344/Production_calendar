@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Radio,
@@ -75,6 +76,7 @@ interface LiveModeProps {
 // ---------------------------------------------------------------------------
 
 export function LiveMode({ scheduleId, isManager }: LiveModeProps) {
+  const t = useTranslations("schedule");
   const queryClient = useQueryClient();
   const { joinSchedule, leaveSchedule } = useSocket();
   const [expanded, setExpanded] = useState(false);
@@ -92,7 +94,7 @@ export function LiveMode({ scheduleId, isManager }: LiveModeProps) {
     queryKey: ["live-session", scheduleId],
     queryFn: async () => {
       const res = await fetch(`/api/live?scheduleId=${scheduleId}`);
-      if (!res.ok) throw new Error("Fehler beim Laden der Live-Session");
+      if (!res.ok) throw new Error(t("liveLoadError"));
       return res.json();
     },
     enabled: !!scheduleId,
@@ -122,12 +124,12 @@ export function LiveMode({ scheduleId, isManager }: LiveModeProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Starten");
+        throw new Error(data.error || t("liveStartError"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Live-Modus gestartet");
+      toast.success(t("liveStarted"));
       queryClient.invalidateQueries({ queryKey: ["live-session", scheduleId] });
       setExpanded(true);
     },
@@ -145,12 +147,12 @@ export function LiveMode({ scheduleId, isManager }: LiveModeProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Stoppen");
+        throw new Error(data.error || t("liveStopError"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Live-Modus gestoppt");
+      toast.success(t("liveStopped"));
       queryClient.invalidateQueries({ queryKey: ["live-session", scheduleId] });
       setExpanded(false);
     },
@@ -184,7 +186,7 @@ export function LiveMode({ scheduleId, isManager }: LiveModeProps) {
                 ) : (
                   <Radio className="size-3.5" />
                 )}
-                Live starten
+                {t("liveStart")}
               </Button>
             ) : (
               <Button
@@ -192,7 +194,7 @@ export function LiveMode({ scheduleId, isManager }: LiveModeProps) {
                 size="sm"
                 className="gap-1.5 border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
                 onClick={() => {
-                  if (confirm("Live-Modus wirklich stoppen?")) {
+                  if (confirm(t("liveStopConfirm"))) {
                     stopMutation.mutate();
                   }
                 }}
@@ -203,7 +205,7 @@ export function LiveMode({ scheduleId, isManager }: LiveModeProps) {
                 ) : (
                   <Square className="size-3.5" />
                 )}
-                Live stoppen
+                {t("liveStop")}
               </Button>
             )}
           </>
@@ -260,6 +262,7 @@ function LivePanel({
   isManager: boolean;
   scheduleId: string;
 }) {
+  const tb = useTranslations("schedule");
   const queryClient = useQueryClient();
 
   return (
@@ -280,7 +283,7 @@ function LivePanel({
       {!isManager && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground font-medium">
-            Offen:
+            {tb("liveOpen")}
           </span>
           {session.days.map((day) => (
             <Badge
@@ -310,6 +313,7 @@ function LivePanel({
 // ---------------------------------------------------------------------------
 
 function LiveTimer({ startedAt }: { startedAt: string }) {
+  const t = useTranslations("schedule");
   const [elapsed, setElapsed] = useState("");
 
   useEffect(() => {
@@ -337,7 +341,7 @@ function LiveTimer({ startedAt }: { startedAt: string }) {
     <div className="flex items-center gap-2 text-sm text-purple-700">
       <Clock className="size-4" />
       <span className="font-mono font-medium">{elapsed}</span>
-      <span className="text-xs text-muted-foreground">aktiv</span>
+      <span className="text-xs text-muted-foreground">{t("active")}</span>
     </div>
   );
 }
@@ -374,7 +378,7 @@ function DayToggles({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Aendern");
+        throw new Error(data.error || t("updateError"));
       }
       return res.json();
     },
@@ -388,9 +392,7 @@ function DayToggles({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-purple-700">
-        Tage fuer Self-Booking:
-      </p>
+      <p className="text-xs font-medium text-purple-700">{t("selfBookingDays")}</p>
       <div className="flex items-center gap-3 flex-wrap">
         {days.map((day) => (
           <div key={day.id} className="flex items-center gap-1.5">
@@ -420,17 +422,18 @@ function DayToggles({
 // ---------------------------------------------------------------------------
 
 function LiveLogFeed({ logs }: { logs: LiveLogData[] }) {
+  const t = useTranslations("schedule");
   if (logs.length === 0) {
     return (
       <div className="text-xs text-muted-foreground text-center py-2">
-        Noch keine Aktivitaet
+        {t("liveNoActivity")}
       </div>
     );
   }
 
   return (
     <div className="space-y-1.5 max-h-48 overflow-y-auto">
-      <p className="text-xs font-medium text-purple-700">Aktivitaet:</p>
+      <p className="text-xs font-medium text-purple-700">{t("liveActivity")}</p>
       {logs.map((log) => (
         <div
           key={log.id}
@@ -445,7 +448,7 @@ function LiveLogFeed({ logs }: { logs: LiveLogData[] }) {
             {log.user.firstName} {log.user.lastName}
           </span>
           <span className="text-muted-foreground">
-            {log.action === "BOOK" ? "eingetragen" : "ausgetragen"}
+            {log.action === "BOOK" ? t("bookedIn") : t("unbookedFrom")}
           </span>
           <span className="ml-auto text-muted-foreground shrink-0">
             {formatTime(log.loggedAt)}

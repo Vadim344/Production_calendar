@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -63,7 +64,7 @@ export type WishRequest = {
   };
 };
 
-// ─── Employee: "Wunsch senden" Button ────────────────────────────────
+// ─── Employee: t("wishSend") Button ────────────────────────────────
 
 interface WishRequestButtonProps {
   shiftId: string;
@@ -77,6 +78,8 @@ export function WishRequestButton({
   currentUserId,
   existingRequest,
 }: WishRequestButtonProps) {
+  const t = useTranslations("schedule");
+  const tc = useTranslations("common");
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [note, setNote] = useState("");
@@ -93,12 +96,12 @@ export function WishRequestButton({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Senden");
+        throw new Error(data.error || t("sendError"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Wunsch gesendet");
+      toast.success(t("wishSent"));
       queryClient.invalidateQueries({ queryKey: ["mod-requests"] });
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
       setDialogOpen(false);
@@ -116,12 +119,12 @@ export function WishRequestButton({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Stornieren");
+        throw new Error(data.error || t("cancelError"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Wunsch storniert");
+      toast.success(t("wishCancelled"));
       queryClient.invalidateQueries({ queryKey: ["mod-requests"] });
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
     },
@@ -135,19 +138,19 @@ export function WishRequestButton({
     const stateConfig = {
       OPEN: {
         icon: Clock,
-        label: "Wunsch offen",
+        label: t("wishOpen"),
         color: "text-amber-600",
         bg: "bg-amber-50",
       },
       ACCEPTED: {
         icon: CheckCircle2,
-        label: "Angenommen",
+        label: t("wishAccepted"),
         color: "text-green-600",
         bg: "bg-green-50",
       },
       DECLINED: {
         icon: XCircle,
-        label: "Abgelehnt",
+        label: t("wishRejected"),
         color: "text-red-600",
         bg: "bg-red-50",
       },
@@ -168,9 +171,9 @@ export function WishRequestButton({
           <button
             type="button"
             className="text-muted-foreground hover:text-destructive transition-colors"
-            title="Wunsch stornieren"
+            title={t("cancelWish")}
             onClick={() => {
-              if (confirm("Wunsch wirklich stornieren?")) {
+              if (confirm(t("wishCancelConfirm"))) {
                 cancelMutation.mutate(existingRequest.id);
               }
             }}
@@ -195,21 +198,20 @@ export function WishRequestButton({
         onClick={() => setDialogOpen(true)}
       >
         <Star className="size-3" />
-        Wunsch
+        {t("wish")}
       </button>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Wunsch senden</DialogTitle>
+            <DialogTitle>{t("wishSend")}</DialogTitle>
             <DialogDescription>
-              Sende einen Wunsch fuer diese Schicht. Dein Manager wird
-              benachrichtigt.
+              {t("wishSendDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <Textarea
-              placeholder="Optionaler Kommentar..."
+              placeholder={t("optionalComment")}
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="resize-none min-h-[80px]"
@@ -221,7 +223,7 @@ export function WishRequestButton({
               size="sm"
               onClick={() => setDialogOpen(false)}
             >
-              Abbrechen
+              {tc("cancel")}
             </Button>
             <Button
               size="sm"
@@ -234,7 +236,7 @@ export function WishRequestButton({
               ) : (
                 <Star className="size-3.5" />
               )}
-              Wunsch senden
+              {t("wishSend")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -251,6 +253,7 @@ interface WishCountBadgeProps {
 }
 
 export function WishCountBadge({ shiftId, scheduleId }: WishCountBadgeProps) {
+  const t_wb = useTranslations("schedule");
   const { data } = useQuery<{ requests: WishRequest[] }>({
     queryKey: ["mod-requests", scheduleId],
     queryFn: async () => {
@@ -311,6 +314,7 @@ interface WishRequestsListProps {
 }
 
 function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
+  const t = useTranslations("schedule");
   const queryClient = useQueryClient();
 
   const acceptMutation = useMutation({
@@ -322,12 +326,12 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler");
+        throw new Error(data.error || t("error"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Wunsch angenommen & Mitarbeiter gebucht");
+      toast.success(t("wishAccepted"));
       queryClient.invalidateQueries({ queryKey: ["mod-requests"] });
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
     },
@@ -345,12 +349,12 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler");
+        throw new Error(data.error || t("error"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Wunsch abgelehnt");
+      toast.success(t("wishRejected"));
       queryClient.invalidateQueries({ queryKey: ["mod-requests"] });
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
     },
@@ -370,7 +374,7 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
           });
           if (!res.ok) {
             const data = await res.json();
-            throw new Error(data.error || "Fehler");
+            throw new Error(data.error || t("error"));
           }
           return res.json();
         })
@@ -381,13 +385,13 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
     },
     onSuccess: (data) => {
       toast.success(
-        `${data.accepted} Wuensche angenommen${data.failed > 0 ? `, ${data.failed} fehlgeschlagen` : ""}`
+        `${data.accepted} ${t("wishesAccepted")}${data.failed > 0 ? `, ${data.failed} ${t("failed")}` : ""}`
       );
       queryClient.invalidateQueries({ queryKey: ["mod-requests"] });
       queryClient.invalidateQueries({ queryKey: ["schedule"] });
     },
     onError: () => {
-      toast.error("Fehler bei der Massenverarbeitung");
+      toast.error(t("bulkError"));
     },
   });
 
@@ -400,7 +404,7 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
     <div>
       <div className="px-3 py-2 border-b bg-muted/30 flex items-center justify-between">
         <span className="text-xs font-semibold">
-          {requests.length} {requests.length === 1 ? "Wunsch" : "Wuensche"}
+          {requests.length} {t(requests.length === 1 ? "wish" : "wishes")}
         </span>
         {requests.length > 1 && (
           <Button
@@ -415,7 +419,7 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
             ) : (
               <Check className="size-3" />
             )}
-            Alle annehmen
+            {t("acceptAll")}
           </Button>
         )}
       </div>
@@ -450,7 +454,7 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
               <button
                 type="button"
                 className="size-6 rounded-md flex items-center justify-center bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
-                title="Annehmen"
+                title={t("accept")}
                 onClick={() => acceptMutation.mutate(req.id)}
                 disabled={isPending}
               >
@@ -463,7 +467,7 @@ function WishRequestsList({ requests, scheduleId }: WishRequestsListProps) {
               <button
                 type="button"
                 className="size-6 rounded-md flex items-center justify-center bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                title="Ablehnen"
+                title={t("reject")}
                 onClick={() => declineMutation.mutate(req.id)}
                 disabled={isPending}
               >
@@ -494,6 +498,7 @@ export function WishFilterToggle({
   onToggle,
   wishCount,
 }: WishFilterToggleProps) {
+  const t_wf = useTranslations("schedule");
   if (wishCount === 0) return null;
 
   return (
@@ -509,7 +514,7 @@ export function WishFilterToggle({
       onClick={() => onToggle(!enabled)}
     >
       <Star className={cn("size-3.5", enabled && "fill-white")} />
-      Wuensche
+      {t_wf("wishes")}
       <Badge
         variant="secondary"
         className={cn(

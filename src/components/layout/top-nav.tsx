@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import {
   CalendarDays,
   Clock,
@@ -19,19 +20,20 @@ import { MobileNav } from "./mobile-nav";
 import { ConnectionStatus } from "./connection-status";
 
 const navItems = [
-  { key: "schedule", icon: CalendarDays, href: "/schedule/flexible", label: "Schichtplaene" },
-  { key: "time", icon: Clock, href: "/time", label: "Zeiterfassung" },
-  { key: "employees", icon: Users, href: "/employees", label: "Mitarbeiter" },
-  { key: "divisions", icon: Building2, href: "/divisions", label: "Arbeitsbereiche" },
-  { key: "portal", icon: MessageSquare, href: "/portal/inbox", label: "Portal" },
-  { key: "reporting", icon: BarChart3, href: "/reporting", label: "Auswertung" },
-  { key: "settings", icon: Settings, href: "/settings", label: "Einstellungen" },
+  { key: "schedule", icon: CalendarDays, href: "/schedule/flexible" },
+  { key: "time", icon: Clock, href: "/time" },
+  { key: "employees", icon: Users, href: "/employees" },
+  { key: "divisions", icon: Building2, href: "/divisions" },
+  { key: "portal", icon: MessageSquare, href: "/portal/inbox" },
+  { key: "reporting", icon: BarChart3, href: "/reporting" },
+  { key: "settings", icon: Settings, href: "/settings" },
 ] as const;
 
 export { navItems };
 
 export function TopNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   const { data: unreadData } = useQuery<{ count: number }>({
     queryKey: ["messages", "unread-count"],
@@ -49,10 +51,8 @@ export function TopNav() {
   return (
     <header className="sticky top-0 z-40 border-b bg-white dark:bg-slate-900 dark:border-slate-800">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center gap-2 px-4">
-        {/* Mobile hamburger */}
         <MobileNav />
 
-        {/* Logo */}
         <Link
           href="/schedule/flexible"
           className="mr-4 flex items-center gap-2 font-bold text-indigo-600 dark:text-indigo-400"
@@ -61,7 +61,6 @@ export function TopNav() {
           <span className="hidden sm:inline">Schichtplaner</span>
         </Link>
 
-        {/* Desktop nav */}
         <nav className="hidden md:flex md:items-center md:gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -78,7 +77,7 @@ export function TopNav() {
                 )}
               >
                 <Icon className="size-4" />
-                <span className="hidden lg:inline">{item.label}</span>
+                <span className="hidden lg:inline">{t(item.key)}</span>
                 {item.key === "portal" && unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                     {unreadCount > 9 ? "9+" : unreadCount}
@@ -89,9 +88,7 @@ export function TopNav() {
           })}
         </nav>
 
-        {/* Right side */}
         <div className="ml-auto flex items-center gap-2">
-          {/* AI button */}
           <Link
             href="/ai/chat"
             className={cn(
@@ -102,7 +99,7 @@ export function TopNav() {
             )}
           >
             <Sparkles className="size-4" />
-            <span className="hidden lg:inline">KI</span>
+            <span className="hidden lg:inline">{t("ai")}</span>
           </Link>
 
           <ConnectionStatus />

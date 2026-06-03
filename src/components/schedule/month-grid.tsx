@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import {
   startOfMonth,
@@ -38,6 +39,7 @@ type MonthScheduleResult = {
  * Click a day to navigate to the KW view.
  */
 export function MonthGrid({ month, year }: MonthGridProps) {
+  const t = useTranslations("schedule");
   const router = useRouter();
 
   // Calculate all the KWs this month spans and all calendar days
@@ -234,7 +236,7 @@ export function MonthGrid({ month, year }: MonthGridProps) {
                         <span className="font-medium text-foreground">
                           {stats.shiftCount}
                         </span>
-                        {stats.shiftCount === 1 ? "Schicht" : "Schichten"}
+                        {t(stats.shiftCount === 1 ? "shift" : "shifts")}
                       </div>
                       <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                         <Users className="size-2.5" />

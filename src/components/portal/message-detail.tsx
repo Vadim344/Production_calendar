@@ -1,10 +1,11 @@
 "use client";
+import { useLocale } from "next-intl";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import {
   ArrowLeft,
   Reply,
@@ -50,6 +51,7 @@ interface MessageFull {
 }
 
 export function MessageDetail() {
+  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const messageId = searchParams.get("id");
@@ -151,7 +153,7 @@ export function MessageDetail() {
                 {msg.sender.firstName} {msg.sender.lastName}
               </span>
               <time className="text-xs text-slate-400">
-                {format(new Date(msg.createdAt), "dd. MMMM yyyy, HH:mm", { locale: de })}
+                {format(new Date(msg.createdAt), "dd. MMMM yyyy, HH:mm", { locale: getDateLocale(locale) })}
               </time>
             </div>
             <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
@@ -187,7 +189,7 @@ export function MessageDetail() {
                       {reply.sender.firstName} {reply.sender.lastName}
                     </span>
                     <time className="text-xs text-slate-400">
-                      {format(new Date(reply.createdAt), "dd. MMM yyyy, HH:mm", { locale: de })}
+                      {format(new Date(reply.createdAt), "dd. MMM yyyy, HH:mm", { locale: getDateLocale(locale) })}
                     </time>
                   </div>
                   <p className="whitespace-pre-wrap text-sm text-slate-700 dark:text-slate-300">

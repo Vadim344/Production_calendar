@@ -1,9 +1,10 @@
 "use client";
+import { useLocale } from "next-intl";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import {
   Folder,
   FileText,
@@ -59,6 +60,7 @@ interface BreadcrumbItem {
 }
 
 export function FileBrowser() {
+  const locale = useLocale();
   const queryClient = useQueryClient();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
@@ -294,7 +296,7 @@ export function FileBrowser() {
                       <div className="text-xs text-slate-500">
                         {formatSize(file.size)} &middot;{" "}
                         {file.uploadedBy.firstName} {file.uploadedBy.lastName} &middot;{" "}
-                        {format(new Date(file.createdAt), "dd. MMM yyyy", { locale: de })}
+                        {format(new Date(file.createdAt), "dd. MMM yyyy", { locale: getDateLocale(locale) })}
                       </div>
                     </div>
 

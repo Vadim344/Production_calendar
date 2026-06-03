@@ -1,10 +1,11 @@
 "use client";
+import { useLocale } from "next-intl";
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { getDateLocale } from "@/lib/date-locale";
 import {
   Mail,
   MailOpen,
@@ -49,6 +50,7 @@ interface Props {
 }
 
 export function MessageList({ folder }: Props) {
+  const locale = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -269,7 +271,7 @@ export function MessageList({ folder }: Props) {
 
                   {/* Date */}
                   <time className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
-                    {format(new Date(msg.createdAt), "dd. MMM yyyy, HH:mm", { locale: de })}
+                    {format(new Date(msg.createdAt), "dd. MMM yyyy, HH:mm", { locale: getDateLocale(locale) })}
                   </time>
                 </div>
               </div>

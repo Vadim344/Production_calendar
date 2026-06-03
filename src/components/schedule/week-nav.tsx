@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Calendar, ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { getISOWeek } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ function getMaxISOWeek(y: number): number {
 }
 
 export function WeekNav({ weekNumber, year, baseUrl = "/schedule/flexible" }: WeekNavProps) {
+  const t = useTranslations("schedule");
   const router = useRouter();
   const currentKW = useMemo(() => getCurrentKW(), []);
   const weekDates = useMemo(
@@ -200,7 +202,7 @@ export function WeekNav({ weekNumber, year, baseUrl = "/schedule/flexible" }: We
                   isCurrent && !isSelected && "ring-1 ring-primary/40"
                 )}
               >
-                KW {kw.weekNumber}
+                {t('calendarWeek')} {kw.weekNumber}
               </Button>
             );
           })}
@@ -217,7 +219,7 @@ export function WeekNav({ weekNumber, year, baseUrl = "/schedule/flexible" }: We
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             <span className="text-lg font-semibold">
-              KW {String(weekNumber).padStart(2, "0")}
+              {t('calendarWeek')} {String(weekNumber).padStart(2, "0")}
             </span>
             <span className="text-muted-foreground">|</span>
             <span className="text-sm text-muted-foreground">
@@ -225,7 +227,7 @@ export function WeekNav({ weekNumber, year, baseUrl = "/schedule/flexible" }: We
             </span>
             {isCurrentWeek && (
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                Heute
+                {t('today')}
               </span>
             )}
           </div>
@@ -238,13 +240,13 @@ export function WeekNav({ weekNumber, year, baseUrl = "/schedule/flexible" }: We
         {/* Jump to KW */}
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground hidden sm:inline">
-            Springe zu:
+            {t('jumpTo')}
           </span>
           <Input
             type="number"
             min={1}
             max={53}
-            placeholder="KW"
+            placeholder={t('calendarWeek')}
             value={jumpKW}
             onChange={(e) => setJumpKW(e.target.value)}
             onKeyDown={handleKeyDown}

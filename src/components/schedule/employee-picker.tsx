@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Loader2, Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   Popover,
   PopoverContent,
@@ -67,11 +68,11 @@ function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  OWNER: "Inhaber",
-  ADMIN: "Admin",
-  MANAGER: "Manager",
-  EMPLOYEE: "MA",
+const ROLE_LABEL_KEYS: Record<string, string> = {
+  OWNER: "roleOwner",
+  ADMIN: "roleAdmin",
+  MANAGER: "roleManager",
+  EMPLOYEE: "roleEmployee",
 };
 
 const ROLE_COLORS: Record<string, string> = {
@@ -89,12 +90,12 @@ function getScoreColor(score: number): string {
 }
 
 /** Format score breakdown for tooltip display. */
-function formatBreakdown(breakdown: ScoreBreakdown): string {
+function formatBreakdown(breakdown: ScoreBreakdown, t: (key: string) => string): string {
   const lines: string[] = [];
-  lines.push(`Stunden: ${breakdown.hours}/40`);
-  lines.push(`Verfuegbarkeit: ${breakdown.availability}/30`);
-  lines.push(`Bereich: ${breakdown.division}/20`);
-  lines.push(`Historie: ${breakdown.history}/10`);
+  lines.push(t("scoreHours", { value: breakdown.hours }));
+  lines.push(t("scoreAvailability", { value: breakdown.availability }));
+  lines.push(t("scoreDivision", { value: breakdown.division }));
+  lines.push(t("scoreHistory", { value: breakdown.history }));
   return lines.join("\n");
 }
 
@@ -104,6 +105,7 @@ export function EmployeePicker({
   shiftId,
   children,
 }: EmployeePickerProps) {
+  const t = useTranslations("schedule");
   const [open, setOpen] = useState(false);
 
   // Fetch all active org employees
@@ -111,7 +113,7 @@ export function EmployeePicker({
     queryKey: ["employees", "active"],
     queryFn: async () => {
       const res = await fetch("/api/employees?status=active");
-      if (!res.ok) throw new Error("Fehler beim Laden der Mitarbeiter");
+      if (!res.ok) throw new Error(t('loadEmployeesError'));
       return res.json();
     },
     enabled: open,
@@ -163,14 +165,14 @@ export function EmployeePicker({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent className="w-72 p-0" align="start" sideOffset={4}>
         <Command>
-          <CommandInput placeholder="Mitarbeiter suchen..." />
+          <CommandInput placeholder={t('searchEmployees')} />
           <CommandList>
-            <CommandEmpty>Keine Mitarbeiter gefunden</CommandEmpty>
+            <CommandEmpty>{t('noEmployeesFound')}</CommandEmpty>
             <CommandGroup>
               {shiftId && scoresLoading && (
                 <div className="flex items-center justify-center gap-2 py-2 text-xs text-muted-foreground">
                   <Loader2 className="size-3 animate-spin" />
-                  Bewertungen laden...
+                  {t('loadScores')}
                 </div>
               )}
               {sortedEmployees.map((emp) => {
@@ -214,7 +216,7 @@ export function EmployeePicker({
                             side="left"
                             className="whitespace-pre text-[11px] leading-relaxed"
                           >
-                            {formatBreakdown(scoreData.breakdown)}
+                            {formatBreakdown(scoreData.breakdown, t)}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -226,7 +228,7 @@ export function EmployeePicker({
                           ROLE_COLORS[emp.role]
                         )}
                       >
-                        {ROLE_LABELS[emp.role] ?? emp.role}
+                        {t(ROLE_LABEL_KEYS[emp.role]) ?? emp.role}
                       </Badge>
                     )}
                   </CommandItem>

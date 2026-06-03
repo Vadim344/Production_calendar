@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const t = useTranslations("auth");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,7 +29,7 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setError("Ungültige Anmeldedaten");
+      setError(t("invalidCredentials"));
       setLoading(false);
     } else {
       router.push("/schedule/flexible");
@@ -39,27 +41,27 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Schichtplaner</CardTitle>
-          <p className="text-sm text-muted-foreground">Anmelden</p>
+          <p className="text-sm text-muted-foreground">{t("login")}</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input id="email" name="email" type="email" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Passwort</Label>
+              <Label htmlFor="password">{t("password")}</Label>
               <Input id="password" name="password" type="password" required />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Wird angemeldet..." : "Anmelden"}
+              {loading ? t("signingIn") : t("login")}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Noch kein Konto?{" "}
+            {t("noAccount")}{" "}
             <Link href="/register" className="text-primary hover:underline">
-              Registrieren
+              {t("register")}
             </Link>
           </p>
         </CardContent>

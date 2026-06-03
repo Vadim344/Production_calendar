@@ -1,4 +1,6 @@
 "use client";
+import { useLocale } from "next-intl";
+import { getDateLocale } from "@/lib/date-locale";
 
 import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +28,6 @@ import {
   subMonths,
   getISOWeek,
 } from "date-fns";
-import { de } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ type TimeResponse = {
 const DAY_NAMES_SHORT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 function getInitials(firstName: string, lastName: string) {
+  const locale = useLocale();
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
@@ -276,7 +278,7 @@ export function TimeList() {
     return records.filter((r) => r.date.slice(0, 10) === dateStr);
   }
 
-  const monthLabel = format(currentMonth, "MMMM yyyy", { locale: de });
+  const monthLabel = format(currentMonth, "MMMM yyyy", { locale: getDateLocale(locale) });
   const isCurrentMonth =
     format(currentMonth, "yyyy-MM") === format(new Date(), "yyyy-MM");
 
