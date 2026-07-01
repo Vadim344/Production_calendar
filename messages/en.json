@@ -341,6 +341,82 @@
       "createSuccess": "Employee created",
       "createMultipleSuccess": "{count} employees created",
       "createError": "Error creating"
+    },
+    "absences": {
+      "title": "Absences",
+      "subtitle": "Manage and approve absence requests",
+      "request": "Request Absence",
+      "viewList": "List",
+      "viewCalendar": "Calendar",
+      "searchPlaceholder": "Search by name or category...",
+      "filterTabs": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "declined": "Declined"
+      },
+      "tableHeaders": {
+        "employee": "Employee",
+        "category": "Category",
+        "period": "Period",
+        "days": "Days",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "declined": "Declined"
+      },
+      "emptyState": {
+        "noAbsences": "No absences",
+        "searchNoResults": "No results found.",
+        "noAbsencesYet": "No absence requests yet."
+      },
+      "error": "Error loading absences. Please try again.",
+      "deleteConfirm": "Really delete this absence?",
+      "toast": {
+        "approved": "Absence approved",
+        "declined": "Absence declined",
+        "deleted": "Absence deleted",
+        "created": "Absence created",
+        "updated": "Absence updated"
+      },
+      "form": {
+        "titleNew": "New Absence",
+        "titleEdit": "Edit Absence",
+        "descriptionNew": "Create a new absence request.",
+        "descriptionEdit": "Edit the absence request.",
+        "employee": "Employee",
+        "employeePlaceholder": "Select employee",
+        "category": "Category",
+        "categoryPlaceholder": "Select category",
+        "dateFrom": "From",
+        "dateTo": "To",
+        "note": "Note (optional)",
+        "notePlaceholder": "Reason for absence...",
+        "submitCreate": "Request",
+        "submitUpdate": "Save",
+        "cancel": "Cancel",
+        "approve": "Approve",
+        "declineBtn": "Decline",
+        "validationCategory": "Please select a category",
+        "validationDate": "Invalid date range",
+        "unpaid": "unpaid"
+      },
+      "calendar": {
+        "today": "Today",
+        "legend": "Legend",
+        "pendingLegend": "Pending (dashed)",
+        "declinedLegend": "Declined (strikethrough)",
+        "holidayLegend": "Holiday",
+        "tooltipApproved": "{name}: {category} (Approved)",
+        "tooltipPending": "{name}: {category} (Pending)",
+        "tooltipDeclined": "{name}: {category} (Declined)",
+        "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        "daysMin": ["M", "T", "W", "T", "F", "S", "S"],
+        "loadError": "Error loading data"
+      }
     }
   },
   "divisions": {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { CalendarDays, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AbsenceList } from "@/components/employees/absence-list";
@@ -9,11 +10,11 @@ import { AbsenceCalendar } from "@/components/employees/absence-calendar";
 type ViewMode = "list" | "calendar";
 
 export default function AbsencesPage() {
+  const t = useTranslations("employees");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
 
   return (
     <div className="space-y-4">
-      {/* View toggle */}
       <div className="flex justify-end">
         <div className="flex gap-1 rounded-md border p-0.5">
           <Button
@@ -22,7 +23,7 @@ export default function AbsencesPage() {
             onClick={() => setViewMode("list")}
           >
             <List className="size-3.5" />
-            <span className="hidden sm:inline">Liste</span>
+            <span className="hidden sm:inline">{t("absences.viewList")}</span>
           </Button>
           <Button
             variant={viewMode === "calendar" ? "default" : "ghost"}
@@ -30,7 +31,7 @@ export default function AbsencesPage() {
             onClick={() => setViewMode("calendar")}
           >
             <CalendarDays className="size-3.5" />
-            <span className="hidden sm:inline">Kalender</span>
+            <span className="hidden sm:inline">{t("absences.viewCalendar")}</span>
           </Button>
         </div>
       </div>

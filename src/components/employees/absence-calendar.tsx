@@ -1,5 +1,5 @@
 "use client";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { getDateLocale } from "@/lib/date-locale";
 
 import { useState, useMemo, useCallback } from "react";
@@ -87,17 +87,12 @@ function isHoliday(holidays: Holiday[], date: Date): Holiday | undefined {
   });
 }
 
-const MONTH_NAMES_SHORT = [
-  "Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
-  "Jul", "Aug", "Sep", "Okt", "Nov", "Dez",
-];
-
-const DAY_NAMES_MIN = ["M", "D", "M", "D", "F", "S", "S"];
-
 // ---------- Component ----------
 
 export function AbsenceCalendar() {
   const locale = useLocale();
+  const t = useTranslations("employees");
+  const dayNamesMin = t.raw("absences.calendar.daysMin") as string[];
   const [year, setYear] = useState(new Date().getFullYear());
   const [showForm, setShowForm] = useState(false);
   const [selectedDateFrom, setSelectedDateFrom] = useState<string>("");
@@ -109,7 +104,7 @@ export function AbsenceCalendar() {
     queryKey: ["absences", "year", year],
     queryFn: async () => {
       const res = await fetch(`/api/absences?year=${year}`);
-      if (!res.ok) throw new Error("Fehler beim Laden der Abwesenheiten");
+      if (!res.ok) throw new Error(t("absences.calendar.loadError"));
       return res.json();
     },
   });
@@ -119,7 +114,7 @@ export function AbsenceCalendar() {
     queryKey: ["holidays", year],
     queryFn: async () => {
       const res = await fetch(`/api/holidays?year=${year}`);
-      if (!res.ok) throw new Error("Fehler beim Laden der Feiertage");
+      if (!res.ok) throw new Error(t("absences.calendar.loadError"));
       return res.json();
     },
   });
@@ -129,7 +124,7 @@ export function AbsenceCalendar() {
     queryKey: ["absence-categories"],
     queryFn: async () => {
       const res = await fetch("/api/absences/categories");
-      if (!res.ok) throw new Error("Fehler");
+      if (!res.ok) throw new Error(t("absences.calendar.loadError"));
       return res.json();
     },
   });
@@ -186,7 +181,7 @@ export function AbsenceCalendar() {
           </div>
           {year !== new Date().getFullYear() && (
             <Button variant="ghost" size="sm" onClick={navigateToday}>
-              Heute
+              {t("absences.calendar.today")}
             </Button>
           )}
         </div>
@@ -203,6 +198,8 @@ export function AbsenceCalendar() {
                 monthDate={monthDate}
                 absences={absences}
                 holidays={holidays}
+                dayNamesMin={dayNamesMin}
+                t={t}
                 onDayClick={handleDayClick}
               />
             ))}
@@ -212,7 +209,7 @@ export function AbsenceCalendar() {
         {/* Legend */}
         {categories.length > 0 && (
           <Card className="p-4">
-            <h3 className="text-sm font-medium mb-2">Legende</h3>
+            <h3 className="text-sm font-medium mb-2">{t("absences.calendar.legend")}</h3>
             <div className="flex flex-wrap gap-4">
               {categories.map((cat) => (
                 <div key={cat.id} className="flex items-center gap-2">
@@ -226,7 +223,7 @@ export function AbsenceCalendar() {
               <div className="flex items-center gap-2">
                 <span className="size-3 rounded-sm shrink-0 bg-gradient-to-r from-yellow-200 to-yellow-300 border border-yellow-400 border-dashed" />
                 <span className="text-sm text-muted-foreground">
-                  Ausstehend (gestreift)
+                  {t("absences.calendar.pendingLegend")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -234,12 +231,12 @@ export function AbsenceCalendar() {
                   <span className="block w-full h-px bg-rose-500 mt-1.5" />
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  Abgelehnt (durchgestrichen)
+                  {t("absences.calendar.declinedLegend")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="size-3 rounded-sm shrink-0 bg-blue-100 dark:bg-blue-900 border border-blue-300" />
-                <span className="text-sm text-muted-foreground">Feiertag</span>
+                <span className="text-sm text-muted-foreground">{t("absences.calendar.holidayLegend")}</span>
               </div>
             </div>
           </Card>
@@ -271,11 +268,15 @@ function MonthGrid({
   monthDate,
   absences,
   holidays,
+  dayNamesMin,
+  t,
   onDayClick,
 }: {
   monthDate: Date;
   absences: CalendarAbsence[];
   holidays: Holiday[];
+  dayNamesMin: string[];
+  t: (key: string) => string;
   onDayClick: (date: Date) => void;
 }) {
   const monthStart = startOfMonth(monthDate);
@@ -297,7 +298,7 @@ function MonthGrid({
       </h4>
       {/* Day headers */}
       <div className="grid grid-cols-7 gap-0.5 mb-1">
-        {DAY_NAMES_MIN.map((name, i) => (
+        {dayNamesMin.map((name, i) => (
           <div
             key={i}
             className={cn(
@@ -322,6 +323,7 @@ function MonthGrid({
             date={day}
             absences={absences}
             holidays={holidays}
+            t={t}
             onClick={() => onDayClick(day)}
           />
         ))}
@@ -336,11 +338,13 @@ function DayCell({
   date,
   absences,
   holidays,
+  t,
   onClick,
 }: {
   date: Date;
   absences: CalendarAbsence[];
   holidays: Holiday[];
+  t: (key: string) => string;
   onClick: () => void;
 }) {
   const today = isToday(date);
@@ -359,16 +363,15 @@ function DayCell({
     const color = absence.category.color;
     if (absence.status === "APPROVED") {
       bgColor = color;
-      tooltipText = `${absence.user.lastName}: ${absence.category.name} (Genehmigt)`;
+      tooltipText = t("absences.calendar.tooltipApproved", { name: `${absence.user.lastName}: ${absence.category.name}` });
     } else if (absence.status === "PENDING") {
-      // Striped/dashed pattern for pending
-      bgColor = color + "60"; // with opacity
+      bgColor = color + "60";
       borderStyle = "border-dashed border";
-      tooltipText = `${absence.user.lastName}: ${absence.category.name} (Ausstehend)`;
+      tooltipText = t("absences.calendar.tooltipPending", { name: `${absence.user.lastName}: ${absence.category.name}` });
     } else if (absence.status === "DECLINED") {
-      bgColor = color + "30"; // very transparent
+      bgColor = color + "30";
       textDecoration = "line-through";
-      tooltipText = `${absence.user.lastName}: ${absence.category.name} (Abgelehnt)`;
+      tooltipText = t("absences.calendar.tooltipDeclined", { name: `${absence.user.lastName}: ${absence.category.name}` });
     }
   } else if (holiday) {
     tooltipText = holiday.name;

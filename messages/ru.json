@@ -341,6 +341,82 @@
       "createSuccess": "Сотрудник создан",
       "createMultipleSuccess": "{count} сотрудников создано",
       "createError": "Ошибка при создании"
+    },
+    "absences": {
+      "title": "Отсутствия",
+      "subtitle": "Управляй и одобряй запросы на отсутствие",
+      "request": "Запросить отсутствие",
+      "viewList": "Список",
+      "viewCalendar": "Календарь",
+      "searchPlaceholder": "Поиск по имени или категории...",
+      "filterTabs": {
+        "all": "Все",
+        "pending": "На рассмотрении",
+        "approved": "Одобрено",
+        "declined": "Отклонено"
+      },
+      "tableHeaders": {
+        "employee": "Сотрудник",
+        "category": "Категория",
+        "period": "Период",
+        "days": "Дни",
+        "status": "Статус",
+        "actions": "Действия"
+      },
+      "status": {
+        "pending": "На рассмотрении",
+        "approved": "Одобрено",
+        "declined": "Отклонено"
+      },
+      "emptyState": {
+        "noAbsences": "Нет отсутствий",
+        "searchNoResults": "Ничего не найдено.",
+        "noAbsencesYet": "Ещё нет запросов на отсутствие."
+      },
+      "error": "Ошибка при загрузке отсутствий. Попробуй снова.",
+      "deleteConfirm": "Действительно удалить это отсутствие?",
+      "toast": {
+        "approved": "Отсутствие одобрено",
+        "declined": "Отсутствие отклонено",
+        "deleted": "Отсутствие удалено",
+        "created": "Отсутствие создано",
+        "updated": "Отсутствие обновлено"
+      },
+      "form": {
+        "titleNew": "Новое отсутствие",
+        "titleEdit": "Изменить отсутствие",
+        "descriptionNew": "Создай новый запрос на отсутствие.",
+        "descriptionEdit": "Измени запрос на отсутствие.",
+        "employee": "Сотрудник",
+        "employeePlaceholder": "Выбери сотрудника",
+        "category": "Категория",
+        "categoryPlaceholder": "Выбери категорию",
+        "dateFrom": "От",
+        "dateTo": "До",
+        "note": "Заметка (необязательно)",
+        "notePlaceholder": "Причина отсутствия...",
+        "submitCreate": "Запросить",
+        "submitUpdate": "Сохранить",
+        "cancel": "Отмена",
+        "approve": "Одобрить",
+        "declineBtn": "Отклонить",
+        "validationCategory": "Выбери категорию",
+        "validationDate": "Некорректный диапазон дат",
+        "unpaid": "неоплачиваемый"
+      },
+      "calendar": {
+        "today": "Сегодня",
+        "legend": "Легенда",
+        "pendingLegend": "На рассмотрении (пунктир)",
+        "declinedLegend": "Отклонено (зачёркнуто)",
+        "holidayLegend": "Праздник",
+        "tooltipApproved": "{name}: {category} (Одобрено)",
+        "tooltipPending": "{name}: {category} (На рассмотрении)",
+        "tooltipDeclined": "{name}: {category} (Отклонено)",
+        "months": ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
+        "daysMin": ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
+        "loadError": "Ошибка при загрузке данных"
+      }
     }
   },
   "divisions": {

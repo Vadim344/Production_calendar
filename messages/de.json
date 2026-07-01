@@ -341,6 +341,82 @@
       "createSuccess": "Mitarbeiter wurde angelegt",
       "createMultipleSuccess": "{count} Mitarbeiter wurden angelegt",
       "createError": "Fehler beim Anlegen"
+    },
+    "absences": {
+      "title": "Abwesenheiten",
+      "subtitle": "Abwesenheitsanfragen verwalten und genehmigen",
+      "request": "Abwesenheit beantragen",
+      "viewList": "Liste",
+      "viewCalendar": "Kalender",
+      "searchPlaceholder": "Suche nach Name oder Kategorie...",
+      "filterTabs": {
+        "all": "Alle",
+        "pending": "Ausstehend",
+        "approved": "Genehmigt",
+        "declined": "Abgelehnt"
+      },
+      "tableHeaders": {
+        "employee": "Mitarbeiter",
+        "category": "Kategorie",
+        "period": "Zeitraum",
+        "days": "Tage",
+        "status": "Status",
+        "actions": "Aktionen"
+      },
+      "status": {
+        "pending": "Ausstehend",
+        "approved": "Genehmigt",
+        "declined": "Abgelehnt"
+      },
+      "emptyState": {
+        "noAbsences": "Keine Abwesenheiten",
+        "searchNoResults": "Keine Ergebnisse für die Suche.",
+        "noAbsencesYet": "Noch keine Abwesenheitsanfragen vorhanden."
+      },
+      "error": "Fehler beim Laden der Abwesenheiten. Bitte versuche es erneut.",
+      "deleteConfirm": "Abwesenheit wirklich löschen?",
+      "toast": {
+        "approved": "Abwesenheit genehmigt",
+        "declined": "Abwesenheit abgelehnt",
+        "deleted": "Abwesenheit gelöscht",
+        "created": "Abwesenheit erstellt",
+        "updated": "Abwesenheit aktualisiert"
+      },
+      "form": {
+        "titleNew": "Abwesenheit beantragen",
+        "titleEdit": "Abwesenheit bearbeiten",
+        "descriptionNew": "Erstelle eine neue Abwesenheitsanfrage.",
+        "descriptionEdit": "Bearbeite die Abwesenheitsanfrage.",
+        "employee": "Mitarbeiter",
+        "employeePlaceholder": "Mitarbeiter wählen",
+        "category": "Kategorie",
+        "categoryPlaceholder": "Kategorie wählen",
+        "dateFrom": "Von",
+        "dateTo": "Bis",
+        "note": "Notiz (optional)",
+        "notePlaceholder": "Grund der Abwesenheit...",
+        "submitCreate": "Beantragen",
+        "submitUpdate": "Speichern",
+        "cancel": "Abbrechen",
+        "approve": "Genehmigen",
+        "declineBtn": "Ablehnen",
+        "validationCategory": "Bitte eine Kategorie wählen",
+        "validationDate": "Ungültige Datumsauswahl",
+        "unpaid": "unbezahlt"
+      },
+      "calendar": {
+        "today": "Heute",
+        "legend": "Legende",
+        "pendingLegend": "Ausstehend (gestreift)",
+        "declinedLegend": "Abgelehnt (durchgestrichen)",
+        "holidayLegend": "Feiertag",
+        "tooltipApproved": "{name}: {category} (Genehmigt)",
+        "tooltipPending": "{name}: {category} (Ausstehend)",
+        "tooltipDeclined": "{name}: {category} (Abgelehnt)",
+        "months": ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+        "daysMin": ["M", "D", "M", "D", "F", "S", "S"],
+        "loadError": "Fehler beim Laden"
+      }
     }
   },
   "divisions": {

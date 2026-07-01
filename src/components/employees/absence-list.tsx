@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -50,13 +51,6 @@ type FilterTab = "all" | "pending" | "approved" | "declined";
 
 // ---------- Helpers ----------
 
-const tabs: { key: FilterTab; label: string }[] = [
-  { key: "all", label: "Alle" },
-  { key: "pending", label: "Ausstehend" },
-  { key: "approved", label: "Genehmigt" },
-  { key: "declined", label: "Abgelehnt" },
-];
-
 function getInitials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
@@ -73,6 +67,7 @@ function formatDateRange(from: string, to: string): string {
 // ---------- Component ----------
 
 export function AbsenceList() {
+  const t = useTranslations("employees");
   const queryClient = useQueryClient();
   const { data: currentMember } = useCurrentMember();
   const isAdmin =
@@ -82,6 +77,8 @@ export function AbsenceList() {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingAbsence, setEditingAbsence] = useState<AbsenceData | null>(null);
+
+  const filterTabs: FilterTab[] = ["all", "pending", "approved", "declined"];
 
   // Build query params
   const queryParams = new URLSearchParams();
@@ -94,7 +91,7 @@ export function AbsenceList() {
     queryKey: ["absences", activeTab],
     queryFn: async () => {
       const res = await fetch(`/api/absences?${queryParams.toString()}`);
-      if (!res.ok) throw new Error("Fehler beim Laden der Abwesenheiten");
+      if (!res.ok) throw new Error("Error loading absences");
       return res.json();
     },
   });
@@ -141,12 +138,12 @@ export function AbsenceList() {
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || "Fehler beim Genehmigen");
+        throw new Error(d.error || "Error");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Abwesenheit genehmigt");
+      toast.success(t("absences.toast.approved"));
       queryClient.invalidateQueries({ queryKey: ["absences"] });
     },
     onError: (err: Error) => toast.error(err.message),
@@ -162,12 +159,12 @@ export function AbsenceList() {
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || "Fehler beim Ablehnen");
+        throw new Error(d.error || "Error");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Abwesenheit abgelehnt");
+      toast.success(t("absences.toast.declined"));
       queryClient.invalidateQueries({ queryKey: ["absences"] });
     },
     onError: (err: Error) => toast.error(err.message),
@@ -179,19 +176,19 @@ export function AbsenceList() {
       const res = await fetch(`/api/absences/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || "Fehler beim Loeschen");
+        throw new Error(d.error || "Error");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Abwesenheit geloescht");
+      toast.success(t("absences.toast.deleted"));
       queryClient.invalidateQueries({ queryKey: ["absences"] });
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
   function handleDelete(id: string) {
-    if (confirm("Abwesenheit wirklich loeschen?")) {
+    if (confirm(t("absences.deleteConfirm"))) {
       deleteMutation.mutate(id);
     }
   }
@@ -206,9 +203,9 @@ export function AbsenceList() {
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Abwesenheiten</h1>
+          <h1 className="text-2xl font-bold">{t("absences.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Abwesenheitsanfragen verwalten und genehmigen
+            {t("absences.subtitle")}
           </p>
         </div>
         <Button
@@ -219,7 +216,7 @@ export function AbsenceList() {
           }}
         >
           <Plus className="size-4" />
-          Abwesenheit beantragen
+          {t("absences.request")}
         </Button>
       </div>
 
@@ -230,19 +227,19 @@ export function AbsenceList() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Suche nach Name oder Kategorie..."
+            placeholder={t("absences.searchPlaceholder")}
             className="pl-9"
           />
         </div>
 
         <div className="flex flex-wrap gap-1">
-          {tabs.map((tab) => {
-            const count = counts[tab.key] ?? 0;
-            const active = activeTab === tab.key;
+          {filterTabs.map((key) => {
+            const count = counts[key] ?? 0;
+            const active = activeTab === key;
             return (
               <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                key={key}
+                onClick={() => setActiveTab(key)}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                   active
@@ -250,19 +247,19 @@ export function AbsenceList() {
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
-                {tab.key === "pending" && (
+                {key === "pending" && (
                   <Clock className="size-3.5 text-yellow-500" />
                 )}
-                {tab.key === "approved" && (
+                {key === "approved" && (
                   <Check className="size-3.5 text-green-500" />
                 )}
-                {tab.key === "declined" && (
+                {key === "declined" && (
                   <X className="size-3.5 text-red-500" />
                 )}
-                {tab.key === "all" && (
+                {key === "all" && (
                   <Filter className="size-3.5" />
                 )}
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="hidden sm:inline">{t(`absences.filterTabs.${key}`)}</span>
                 <span className="tabular-nums text-xs opacity-70">
                   ({count})
                 </span>
@@ -275,7 +272,7 @@ export function AbsenceList() {
       {/* Error */}
       {error && (
         <Card className="p-6 text-center text-destructive">
-          Fehler beim Laden der Abwesenheiten. Bitte versuche es erneut.
+          {t("absences.error")}
         </Card>
       )}
 
@@ -286,11 +283,11 @@ export function AbsenceList() {
       {!isLoading && !error && filteredAbsences.length === 0 && (
         <Card className="flex flex-col items-center justify-center p-12 text-center">
           <CalendarDays className="size-12 text-muted-foreground/50 mb-3" />
-          <p className="text-lg font-medium">Keine Abwesenheiten</p>
+          <p className="text-lg font-medium">{t("absences.emptyState.noAbsences")}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {search
-              ? "Keine Ergebnisse fuer die Suche."
-              : "Noch keine Abwesenheitsanfragen vorhanden."}
+              ? t("absences.emptyState.searchNoResults")
+              : t("absences.emptyState.noAbsencesYet")}
           </p>
         </Card>
       )}
@@ -302,12 +299,12 @@ export function AbsenceList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mitarbeiter</TableHead>
-                  <TableHead>Kategorie</TableHead>
-                  <TableHead>Zeitraum</TableHead>
-                  <TableHead className="text-center">Tage</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aktionen</TableHead>
+                  <TableHead>{t("absences.tableHeaders.employee")}</TableHead>
+                  <TableHead>{t("absences.tableHeaders.category")}</TableHead>
+                  <TableHead>{t("absences.tableHeaders.period")}</TableHead>
+                  <TableHead className="text-center">{t("absences.tableHeaders.days")}</TableHead>
+                  <TableHead>{t("absences.tableHeaders.status")}</TableHead>
+                  <TableHead className="text-right">{t("absences.tableHeaders.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -350,7 +347,7 @@ export function AbsenceList() {
                       <TableCell className="text-center tabular-nums">
                         {days}
                       </TableCell>
-                      <TableCell>{getStatusBadge(absence.status)}</TableCell>
+                      <TableCell>{getStatusBadge(absence.status, t)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center gap-1 justify-end">
                           {/* Quick approve/decline for admins on pending */}
@@ -361,7 +358,7 @@ export function AbsenceList() {
                                 size="icon-xs"
                                 onClick={() => approveMutation.mutate(absence.id)}
                                 disabled={approveMutation.isPending}
-                                title="Genehmigen"
+                                title={t("absences.form.approve")}
                               >
                                 <Check className="size-3.5 text-green-500" />
                               </Button>
@@ -370,7 +367,7 @@ export function AbsenceList() {
                                 size="icon-xs"
                                 onClick={() => declineMutation.mutate(absence.id)}
                                 disabled={declineMutation.isPending}
-                                title="Ablehnen"
+                                title={t("absences.form.declineBtn")}
                               >
                                 <X className="size-3.5 text-red-500" />
                               </Button>
@@ -380,7 +377,7 @@ export function AbsenceList() {
                             variant="ghost"
                             size="icon-xs"
                             onClick={() => handleEdit(absence)}
-                            title="Bearbeiten"
+                            title={t("absences.form.titleEdit")}
                           >
                             <Pencil className="size-3" />
                           </Button>
@@ -390,7 +387,7 @@ export function AbsenceList() {
                               size="icon-xs"
                               onClick={() => handleDelete(absence.id)}
                               disabled={deleteMutation.isPending}
-                              title="Loeschen"
+                              title={t("absences.deleteConfirm")}
                             >
                               <Trash2 className="size-3 text-destructive" />
                             </Button>
@@ -440,13 +437,13 @@ export function AbsenceList() {
                         </div>
                       </div>
                     </div>
-                    {getStatusBadge(absence.status)}
+                    {getStatusBadge(absence.status, t)}
                   </div>
                   <div className="mt-3 flex items-center justify-between">
                     <div className="text-sm text-muted-foreground tabular-nums">
                       {formatDateRange(absence.dateFrom, absence.dateTo)}
                       <span className="ml-2">
-                        ({days} Tag{days !== 1 ? "e" : ""})
+                        ({days} {t("absences.tableHeaders.days")})
                       </span>
                     </div>
                     <div className="flex items-center gap-1">

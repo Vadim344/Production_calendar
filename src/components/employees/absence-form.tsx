@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, Check, X } from "lucide-react";
 import { format } from "date-fns";
@@ -77,24 +78,25 @@ function calculateDays(from: string, to: string): number {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string, t?: (key: string) => string) {
+  const label = (key: string) => t?.(`absences.status.${key}`) ?? key;
   switch (status) {
     case "PENDING":
       return (
         <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-          Ausstehend
+          {label("pending")}
         </Badge>
       );
     case "APPROVED":
       return (
         <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-          Genehmigt
+          {label("approved")}
         </Badge>
       );
     case "DECLINED":
       return (
         <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-          Abgelehnt
+          {label("declined")}
         </Badge>
       );
     default:
@@ -112,6 +114,7 @@ export function AbsenceForm({
   defaultDateFrom,
   defaultDateTo,
 }: AbsenceFormProps) {
+  const t = useTranslations("employees");
   const isEdit = !!absence;
   const queryClient = useQueryClient();
   const { data: currentMember } = useCurrentMember();
@@ -176,12 +179,12 @@ export function AbsenceForm({
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Erstellen");
+        throw new Error(data.error || "Error");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Abwesenheit erstellt");
+      toast.success(t("absences.toast.created"));
       queryClient.invalidateQueries({ queryKey: ["absences"] });
       onOpenChange(false);
     },
@@ -201,12 +204,12 @@ export function AbsenceForm({
       });
       if (!res.ok) {
         const d = await res.json();
-        throw new Error(d.error || "Fehler beim Speichern");
+        throw new Error(d.error || "Error");
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Abwesenheit aktualisiert");
+      toast.success(t("absences.toast.updated"));
       queryClient.invalidateQueries({ queryKey: ["absences"] });
       onOpenChange(false);
     },
@@ -221,11 +224,11 @@ export function AbsenceForm({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!categoryId) {
-      toast.error("Bitte eine Kategorie waehlen");
+      toast.error(t("absences.form.validationCategory"));
       return;
     }
     if (days <= 0) {
-      toast.error("Ungueltige Datumsauswahl");
+      toast.error(t("absences.form.validationDate"));
       return;
     }
     if (isEdit) {
@@ -256,12 +259,12 @@ export function AbsenceForm({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
-              {isEdit ? "Abwesenheit bearbeiten" : "Abwesenheit beantragen"}
+              {isEdit ? t("absences.form.titleEdit") : t("absences.form.titleNew")}
             </DialogTitle>
             <DialogDescription>
               {isEdit
-                ? "Bearbeite die Abwesenheitsanfrage."
-                : "Erstelle eine neue Abwesenheitsanfrage."}
+                ? t("absences.form.descriptionEdit")
+                : t("absences.form.descriptionNew")}
             </DialogDescription>
           </DialogHeader>
 
@@ -270,7 +273,7 @@ export function AbsenceForm({
             {isEdit && absence && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Status:</span>
-                {getStatusBadge(absence.status)}
+                {getStatusBadge(absence.status, t)}
                 {absence.user && (
                   <span className="text-sm text-muted-foreground ml-auto">
                     {absence.user.lastName}, {absence.user.firstName}
@@ -282,10 +285,10 @@ export function AbsenceForm({
             {/* Employee select (only for admins in create mode) */}
             {!isEdit && isAdmin && employees.length > 0 && (
               <div className="space-y-1.5">
-                <Label>Mitarbeiter</Label>
+                <Label>{t("absences.form.employee")}</Label>
                 <Select value={userId} onValueChange={setUserId}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Mitarbeiter waehlen" />
+                    <SelectValue placeholder={t("absences.form.employeePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {employees.map((emp) => (
@@ -300,10 +303,10 @@ export function AbsenceForm({
 
             {/* Category select */}
             <div className="space-y-1.5">
-              <Label>Kategorie</Label>
+              <Label>{t("absences.form.category")}</Label>
               <Select value={categoryId} onValueChange={setCategoryId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Kategorie waehlen" />
+                  <SelectValue placeholder={t("absences.form.categoryPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -316,7 +319,7 @@ export function AbsenceForm({
                         <span>{cat.name}</span>
                         {!cat.isPaid && (
                           <span className="text-xs text-muted-foreground">
-                            (unbezahlt)
+                            ({t("absences.form.unpaid")})
                           </span>
                         )}
                       </div>
@@ -329,7 +332,7 @@ export function AbsenceForm({
             {/* Date range */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="absence-from">Von</Label>
+                <Label htmlFor="absence-from">{t("absences.form.dateFrom")}</Label>
                 <Input
                   id="absence-from"
                   type="date"
@@ -339,7 +342,7 @@ export function AbsenceForm({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="absence-to">Bis</Label>
+                <Label htmlFor="absence-to">{t("absences.form.dateTo")}</Label>
                 <Input
                   id="absence-to"
                   type="date"
@@ -353,18 +356,18 @@ export function AbsenceForm({
             {/* Days count */}
             {days > 0 && (
               <p className="text-sm text-muted-foreground">
-                {days} Tag{days !== 1 ? "e" : ""}
+                {days} {t("absences.tableHeaders.days")}
               </p>
             )}
 
             {/* Note */}
             <div className="space-y-1.5">
-              <Label htmlFor="absence-note">Notiz (optional)</Label>
+              <Label htmlFor="absence-note">{t("absences.form.note")}</Label>
               <Textarea
                 id="absence-note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Grund der Abwesenheit..."
+                placeholder={t("absences.form.notePlaceholder")}
                 rows={2}
                 maxLength={500}
               />
@@ -385,7 +388,7 @@ export function AbsenceForm({
                     className="text-green-600 border-green-300 hover:bg-green-50 dark:hover:bg-green-950"
                   >
                     <Check className="size-4" />
-                    Genehmigen
+                    {t("absences.form.approve")}
                   </Button>
                   <Button
                     type="button"
@@ -396,7 +399,7 @@ export function AbsenceForm({
                     className="text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950"
                   >
                     <X className="size-4" />
-                    Ablehnen
+                    {t("absences.form.declineBtn")}
                   </Button>
                 </div>
               )}
@@ -407,11 +410,11 @@ export function AbsenceForm({
                   onClick={() => onOpenChange(false)}
                   disabled={isPending}
                 >
-                  Abbrechen
+                  {t("absences.form.cancel")}
                 </Button>
                 <Button type="submit" disabled={isPending}>
                   {isPending && <Loader2 className="size-4 animate-spin" />}
-                  {isEdit ? "Speichern" : "Beantragen"}
+                  {isEdit ? t("absences.form.submitUpdate") : t("absences.form.submitCreate")}
                 </Button>
               </div>
             </div>
