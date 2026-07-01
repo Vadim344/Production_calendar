@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,8 @@ const emptyRow: EmployeeRow = {
 };
 
 export function EmployeeForm() {
+  const t = useTranslations("employees");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<EmployeeRow[]>([{ ...emptyRow }]);
   const queryClient = useQueryClient();
@@ -52,7 +55,7 @@ export function EmployeeForm() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Fehler beim Anlegen");
+        throw new Error(data.error || t("form.createError"));
       }
       return res.json();
     },
@@ -60,8 +63,8 @@ export function EmployeeForm() {
       const count = data.members?.length ?? 0;
       toast.success(
         count === 1
-          ? "Mitarbeiter wurde angelegt"
-          : `${count} Mitarbeiter wurden angelegt`
+          ? t("form.createSuccess")
+          : t("form.createMultipleSuccess", { count })
       );
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       setOpen(false);
@@ -92,12 +95,11 @@ export function EmployeeForm() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    // Basic validation
     const valid = rows.every(
       (r) => r.firstName.trim() && r.lastName.trim() && r.email.trim()
     );
     if (!valid) {
-      toast.error("Bitte alle Pflichtfelder ausfuellen");
+      toast.error(t("form.validationError"));
       return;
     }
 
@@ -109,15 +111,15 @@ export function EmployeeForm() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="size-4" />
-          Neue Mitarbeiter anlegen
+          {t("addNew")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Neue Mitarbeiter anlegen</DialogTitle>
+            <DialogTitle>{t("form.title")}</DialogTitle>
             <DialogDescription>
-              Lege einen oder mehrere Mitarbeiter gleichzeitig an.
+              {t("form.description")}
             </DialogDescription>
           </DialogHeader>
 
@@ -128,38 +130,38 @@ export function EmployeeForm() {
                 className="grid grid-cols-[1fr_1fr_1fr_auto_auto] items-end gap-2 rounded-md border p-3"
               >
                 <div className="space-y-1.5">
-                  <Label>Vorname *</Label>
+                  <Label>{t("form.firstName")}</Label>
                   <Input
                     value={row.firstName}
                     onChange={(e) =>
                       updateRow(index, "firstName", e.target.value)
                     }
-                    placeholder="Max"
+                    placeholder={t("form.firstNamePlaceholder")}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Nachname *</Label>
+                  <Label>{t("form.lastName")}</Label>
                   <Input
                     value={row.lastName}
                     onChange={(e) =>
                       updateRow(index, "lastName", e.target.value)
                     }
-                    placeholder="Mustermann"
+                    placeholder={t("form.lastNamePlaceholder")}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>E-Mail *</Label>
+                  <Label>{t("form.email")}</Label>
                   <Input
                     type="email"
                     value={row.email}
                     onChange={(e) =>
                       updateRow(index, "email", e.target.value)
                     }
-                    placeholder="max@beispiel.de"
+                    placeholder={t("form.emailPlaceholder")}
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Rolle</Label>
+                  <Label>{t("form.role")}</Label>
                   <Select
                     value={row.role}
                     onValueChange={(v) =>
@@ -170,9 +172,9 @@ export function EmployeeForm() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="EMPLOYEE">Mitarbeiter</SelectItem>
-                      <SelectItem value="MANAGER">Manager</SelectItem>
-                      <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="EMPLOYEE">{t("form.roleEmployee")}</SelectItem>
+                      <SelectItem value="MANAGER">{t("form.roleManager")}</SelectItem>
+                      <SelectItem value="ADMIN">{t("form.roleAdmin")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -198,7 +200,7 @@ export function EmployeeForm() {
             onClick={addRow}
           >
             <Plus className="size-4" />
-            Weiteren hinzufuegen
+            {t("form.addAnother")}
           </Button>
 
           <DialogFooter className="mt-6">
@@ -207,15 +209,15 @@ export function EmployeeForm() {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Abbrechen
+              {tc("cancel")}
             </Button>
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
               )}
               {rows.length === 1
-                ? "Mitarbeiter anlegen"
-                : `${rows.length} Mitarbeiter anlegen`}
+                ? t("form.submitSingle")
+                : t("form.submitMultiple", { count: rows.length })}
             </Button>
           </DialogFooter>
         </form>

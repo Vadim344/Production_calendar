@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -83,19 +84,6 @@ function getInitials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
-function getRoleLabel(role: string) {
-  switch (role) {
-    case "OWNER":
-      return "Owner";
-    case "ADMIN":
-      return "Admin";
-    case "MANAGER":
-      return "Manager";
-    default:
-      return "Mitarbeiter";
-  }
-}
-
 function getRoleBadgeColor(role: string) {
   switch (role) {
     case "OWNER":
@@ -109,7 +97,6 @@ function getRoleBadgeColor(role: string) {
   }
 }
 
-// Inline editable field component
 function InlineEdit({
   value,
   onSave,
@@ -189,6 +176,8 @@ function InlineEdit({
 }
 
 export function EmployeeDetail({ memberId }: { memberId: string }) {
+  const t = useTranslations("employees");
+  const tc = useTranslations("common");
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: currentMember } = useCurrentMember();
@@ -202,7 +191,6 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
   const isManagerPlus =
     isAdmin || currentMember?.role === "MANAGER";
 
-  // Fetch employee detail
   const {
     data: employee,
     isLoading,
@@ -211,12 +199,11 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
     queryKey: ["employee", memberId],
     queryFn: async () => {
       const res = await fetch(`/api/employees/${memberId}`);
-      if (!res.ok) throw new Error("Mitarbeiter nicht gefunden");
+      if (!res.ok) throw new Error(t("detail.employeeNotFound"));
       return res.json();
     },
   });
 
-  // Fetch notes
   const { data: notes } = useQuery<Note[]>({
     queryKey: ["employee-notes", memberId],
     queryFn: async () => {
@@ -227,7 +214,6 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
     enabled: isManagerPlus,
   });
 
-  // Update employee mutation
   const updateMutation = useMutation({
     mutationFn: async (data: Record<string, string>) => {
       const res = await fetch(`/api/employees/${memberId}`, {
@@ -237,12 +223,12 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Fehler beim Speichern");
+        throw new Error(err.error || tc("save") + " " + t("error"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Gespeichert");
+      toast.success(t("detail.saved"));
       queryClient.invalidateQueries({ queryKey: ["employee", memberId] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
@@ -251,7 +237,6 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
     },
   });
 
-  // Change role mutation
   const roleMutation = useMutation({
     mutationFn: async (role: string) => {
       const res = await fetch(`/api/employees/${memberId}/role`, {
@@ -261,12 +246,12 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Fehler beim Aendern der Rolle");
+        throw new Error(err.error || t("error"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Rolle geaendert");
+      toast.success(t("detail.roleChanged"));
       queryClient.invalidateQueries({ queryKey: ["employee", memberId] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
@@ -275,7 +260,6 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
     },
   });
 
-  // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/employees/${memberId}`, {
@@ -283,12 +267,12 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Fehler beim Deaktivieren");
+        throw new Error(err.error || t("error"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Mitarbeiter deaktiviert");
+      toast.success(t("detail.employeeDeactivated"));
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       router.push("/employees");
     },
@@ -297,7 +281,6 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
     },
   });
 
-  // Reset password mutation
   const resetPasswordMutation = useMutation({
     mutationFn: async (newPassword: string) => {
       const res = await fetch(`/api/admin/users/${memberId}/reset-password`, {
@@ -307,12 +290,12 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Fehler beim Zuruecksetzen");
+        throw new Error(err.error || t("error"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Passwort zurueckgesetzt");
+      toast.success(t("detail.passwordReset"));
       setResetPasswordOpen(false);
       setResetPasswordValue("");
     },
@@ -321,7 +304,6 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
     },
   });
 
-  // Create note mutation
   const noteMutation = useMutation({
     mutationFn: async (text: string) => {
       const res = await fetch(`/api/employees/${memberId}/notes`, {
@@ -331,12 +313,12 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Fehler beim Speichern der Notiz");
+        throw new Error(err.error || t("error"));
       }
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Notiz gespeichert");
+      toast.success(t("detail.noteSaved"));
       setNoteText("");
       queryClient.invalidateQueries({
         queryKey: ["employee-notes", memberId],
@@ -356,29 +338,41 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.push("/employees")}>
           <ArrowLeft className="size-4" />
-          Zurueck
+          {tc("back")}
         </Button>
         <Card className="p-12 text-center">
-          <p className="text-destructive">Mitarbeiter nicht gefunden.</p>
+          <p className="text-destructive">{t("detail.employeeNotFound")}</p>
         </Card>
       </div>
     );
   }
 
+  const joinedDate = new Date(employee.joinedAt).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
   const isSelf = employee.user.id === currentMember?.user?.id;
   const canEdit = isAdmin || isSelf;
   const canChangeRole = isAdmin && !isSelf && employee.role !== "OWNER";
   const canDelete = isAdmin && !isSelf && employee.role !== "OWNER";
 
+  function roleLabel(role: string) {
+    switch (role) {
+      case "OWNER": return t("owner");
+      case "ADMIN": return t("admin");
+      case "MANAGER": return t("manager");
+      default: return t("employee");
+    }
+  }
+
   return (
     <div className="space-y-6">
-      {/* Back button */}
       <Button variant="ghost" onClick={() => router.push("/employees")}>
         <ArrowLeft className="size-4" />
-        Zurueck zur Liste
+        {t("detail.backToList")}
       </Button>
 
-      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <Avatar size="lg">
@@ -395,33 +389,32 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
             </h1>
             <div className="flex items-center gap-2 mt-1">
               <Badge className={getRoleBadgeColor(employee.role)}>
-                {getRoleLabel(employee.role)}
+                {roleLabel(employee.role)}
               </Badge>
               {!employee.isActive && (
-                <Badge variant="destructive">Inaktiv</Badge>
+                <Badge variant="destructive">{t("status.inactive")}</Badge>
               )}
               {employee.isActive && !employee.isActivated && (
                 <Badge
                   variant="outline"
                   className="border-amber-500 text-amber-600"
                 >
-                  Nicht freigeschaltet
+                  {t("status.notActivated")}
                 </Badge>
               )}
             </div>
           </div>
         </div>
 
-        {/* Actions dropdown */}
         {(canChangeRole || canDelete) && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">Aktionen</Button>
+              <Button variant="outline">{t("detail.actions")}</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {isAdmin && (
                 <DropdownMenuItem onClick={() => setResetPasswordOpen(true)}>
-                  Passwort zuruecksetzen
+                  {t("detail.resetPassword")}
                 </DropdownMenuItem>
               )}
               {canDelete && employee.isActive && (
@@ -430,18 +423,16 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                   onClick={() => setDeleteOpen(true)}
                 >
                   <Trash2 className="size-4" />
-                  Deaktivieren
+                  {t("detail.deactivate")}
                 </DropdownMenuItem>
               )}
               {canDelete && !employee.isActive && (
                 <DropdownMenuItem
                   onClick={() => {
-                    // Reactivate by updating isActive through a custom approach
-                    // For now we use the PATCH endpoint concept
-                    toast.info("Reaktivierung noch nicht implementiert");
+                    toast.info(t("detail.reactivationNotImplemented"));
                   }}
                 >
-                  Reaktivieren
+                  {t("detail.reactivate")}
                 </DropdownMenuItem>
               )}
               {canChangeRole && (
@@ -454,7 +445,7 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                         key={r}
                         onClick={() => roleMutation.mutate(r)}
                       >
-                        Rolle zu {getRoleLabel(r)} aendern
+                        {t("detail.changeRoleTo", { role: roleLabel(r) })}
                       </DropdownMenuItem>
                     ))}
                 </>
@@ -464,20 +455,16 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
         )}
       </div>
 
-      {/* Content Grid */}
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-        {/* Left column - Contact info + Notes */}
         <div className="space-y-6">
-          {/* Contact Info */}
           <Card className="p-5 space-y-4">
             <h2 className="text-sm font-semibold uppercase text-muted-foreground tracking-wide">
-              Kontaktdaten
+              {t("detail.contactInfo")}
             </h2>
 
             <div className="space-y-3">
-              {/* Name */}
               <div className="grid grid-cols-[120px_1fr] items-center">
-                <span className="text-sm text-muted-foreground">Vorname</span>
+                <span className="text-sm text-muted-foreground">{t("detail.firstName")}</span>
                 <InlineEdit
                   value={employee.user.firstName}
                   onSave={(v) => updateMutation.mutate({ firstName: v })}
@@ -485,7 +472,7 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                 />
               </div>
               <div className="grid grid-cols-[120px_1fr] items-center">
-                <span className="text-sm text-muted-foreground">Nachname</span>
+                <span className="text-sm text-muted-foreground">{t("detail.lastName")}</span>
                 <InlineEdit
                   value={employee.user.lastName}
                   onSave={(v) => updateMutation.mutate({ lastName: v })}
@@ -493,7 +480,7 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                 />
               </div>
               <div className="grid grid-cols-[120px_1fr] items-center">
-                <span className="text-sm text-muted-foreground">Spitzname</span>
+                <span className="text-sm text-muted-foreground">{t("detail.nickname")}</span>
                 <InlineEdit
                   value={employee.user.nickname || ""}
                   onSave={(v) => updateMutation.mutate({ nickname: v })}
@@ -501,11 +488,10 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                 />
               </div>
 
-              {/* Email */}
               <div className="grid grid-cols-[120px_1fr] items-center">
                 <span className="text-sm text-muted-foreground">
                   <Mail className="inline size-3.5 mr-1" />
-                  E-Mail
+                  {t("detail.email")}
                 </span>
                 <InlineEdit
                   value={employee.user.email}
@@ -515,11 +501,10 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                 />
               </div>
 
-              {/* Phone */}
               <div className="grid grid-cols-[120px_1fr] items-center">
                 <span className="text-sm text-muted-foreground">
                   <Phone className="inline size-3.5 mr-1" />
-                  Telefon
+                  {t("detail.phone")}
                 </span>
                 <InlineEdit
                   value={employee.user.phone || ""}
@@ -530,10 +515,9 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
               </div>
             </div>
 
-            {/* Role change (inline) */}
             {canChangeRole && (
               <div className="grid grid-cols-[120px_1fr] items-center pt-2 border-t">
-                <span className="text-sm text-muted-foreground">Rolle</span>
+                <span className="text-sm text-muted-foreground">{t("detail.role")}</span>
                 <Select
                   value={employee.role}
                   onValueChange={(v) => roleMutation.mutate(v)}
@@ -543,42 +527,39 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                    <SelectItem value="MANAGER">Manager</SelectItem>
-                    <SelectItem value="EMPLOYEE">Mitarbeiter</SelectItem>
+                    <SelectItem value="ADMIN">{t("admin")}</SelectItem>
+                    <SelectItem value="MANAGER">{t("manager")}</SelectItem>
+                    <SelectItem value="EMPLOYEE">{t("employee")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             )}
           </Card>
 
-          {/* Quick Navigation */}
           <Card className="p-5 space-y-3">
             <h2 className="text-sm font-semibold uppercase text-muted-foreground tracking-wide">
-              Navigation
+              {t("detail.navigation")}
             </h2>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" disabled>
                 <Clock className="size-4" />
-                Stunden
+                {t("hours")}
               </Button>
             </div>
           </Card>
 
-          {/* Notes Section */}
           {isManagerPlus && (
             <Card className="p-5 space-y-4">
               <h2 className="text-sm font-semibold uppercase text-muted-foreground tracking-wide">
                 <StickyNote className="inline size-3.5 mr-1" />
-                Notizen
+                {t("notes")}
               </h2>
 
-              {/* Add note form */}
               <div className="flex gap-2">
                 <Textarea
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
-                  placeholder="Notiz hinzufuegen..."
+                  placeholder={t("detail.addNote")}
                   className="min-h-[60px]"
                 />
                 <Button
@@ -599,7 +580,6 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                 </Button>
               </div>
 
-              {/* Notes list */}
               {notes && notes.length > 0 ? (
                 <div className="space-y-3">
                   {notes.map((note) => (
@@ -628,56 +608,47 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Noch keine Notizen vorhanden.
+                  {t("detail.noNotes")}
                 </p>
               )}
             </Card>
           )}
         </div>
 
-        {/* Right column - E-Dash placeholder */}
         <div className="space-y-6">
           <Card className="p-5">
             <h2 className="text-sm font-semibold uppercase text-muted-foreground tracking-wide mb-4">
-              Monatsuebersicht
+              {t("detail.monthlyOverview")}
             </h2>
             <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
               <Clock className="size-10 opacity-30 mb-3" />
               <p className="text-sm font-medium">E-Dash</p>
               <p className="text-xs mt-1">
-                Stundenauswertung wird mit dem Zeiterfassungsmodul verfuegbar.
+                {t("detail.eDashComingSoon")}
               </p>
             </div>
           </Card>
 
-          {/* Member Meta */}
           <Card className="p-5 space-y-3">
             <h2 className="text-sm font-semibold uppercase text-muted-foreground tracking-wide">
-              Mitgliedschaft
+              {t("detail.memberMeta")}
             </h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Beigetreten</span>
+                <span className="text-muted-foreground">{t("detail.memberSince", { date: joinedDate })}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">{t("detail.statusLabel")}</span>
                 <span>
-                  {new Date(employee.joinedAt).toLocaleDateString("de-DE", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                  })}
+                  {employee.isActive ? t("status.active") : t("status.inactive")}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <span>
-                  {employee.isActive ? "Aktiv" : "Inaktiv"}
-                </span>
+                <span className="text-muted-foreground">{t("detail.activated")}</span>
+                <span>{employee.isActivated ? t("detail.yes") : t("detail.no")}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Freigeschaltet</span>
-                <span>{employee.isActivated ? "Ja" : "Nein"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Member-ID</span>
+                <span className="text-muted-foreground">{t("detail.memberId")}</span>
                 <span className="font-mono text-xs text-muted-foreground">
                   {employee.id}
                 </span>
@@ -687,20 +658,19 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Mitarbeiter deaktivieren?</DialogTitle>
+            <DialogTitle>{t("detail.confirmDelete")}</DialogTitle>
             <DialogDescription>
-              {employee.user.firstName} {employee.user.lastName} wird
-              deaktiviert und hat keinen Zugriff mehr auf die Organisation. Diese
-              Aktion kann rueckgaengig gemacht werden.
+              {t("detail.deleteConfirm", {
+                name: `${employee.user.firstName} ${employee.user.lastName}`,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteOpen(false)}>
-              Abbrechen
+              {tc("cancel")}
             </Button>
             <Button
               variant="destructive"
@@ -713,26 +683,26 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
               {deleteMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
               )}
-              Deaktivieren
+              {t("detail.deactivate")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Reset Password Dialog */}
       <Dialog open={resetPasswordOpen} onOpenChange={(o) => { if (!o) setResetPasswordValue(""); setResetPasswordOpen(o); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Passwort zuruecksetzen</DialogTitle>
+            <DialogTitle>{t("detail.resetPassword")}</DialogTitle>
             <DialogDescription>
-              Gib ein neues Passwort fuer {employee.user.firstName} {employee.user.lastName} ein.
-              Der Mitarbeiter wird beim naechsten Login aufgefordert, das Passwort zu aendern.
+              {t("detail.resetPasswordDescription", {
+                name: `${employee.user.firstName} ${employee.user.lastName}`,
+              })}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <Input
               type="password"
-              placeholder="Neues Passwort (mind. 6 Zeichen)"
+              placeholder={t("detail.resetPasswordPlaceholder")}
               value={resetPasswordValue}
               onChange={(e) => setResetPasswordValue(e.target.value)}
               minLength={6}
@@ -741,7 +711,7 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setResetPasswordOpen(false); setResetPasswordValue(""); }}>
-              Abbrechen
+              {tc("cancel")}
             </Button>
             <Button
               onClick={() => {
@@ -754,7 +724,7 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
               {resetPasswordMutation.isPending && (
                 <Loader2 className="size-4 animate-spin" />
               )}
-              Passwort speichern
+              {t("detail.savePassword")}
             </Button>
           </DialogFooter>
         </DialogContent>

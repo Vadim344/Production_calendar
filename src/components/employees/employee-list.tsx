@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Search,
   Users,
@@ -60,48 +61,49 @@ type EmployeeResponse = {
 
 type FilterTab = "all" | "admin" | "manager" | "not_activated" | "inactive";
 
-const tabs: {
+const tabConfig: {
   key: FilterTab;
-  label: string;
+  tKey: string;
   icon: React.ElementType;
 }[] = [
-  { key: "all", label: "Alle", icon: Users },
-  { key: "admin", label: "Admins", icon: ShieldCheck },
-  { key: "manager", label: "Manager", icon: UserCog },
-  { key: "not_activated", label: "Nicht freigeschaltet", icon: AlertTriangle },
-  { key: "inactive", label: "Inaktiv", icon: UserX },
+  { key: "all", tKey: "all", icon: Users },
+  { key: "admin", tKey: "admins", icon: ShieldCheck },
+  { key: "manager", tKey: "managers", icon: UserCog },
+  { key: "not_activated", tKey: "notActivated", icon: AlertTriangle },
+  { key: "inactive", tKey: "inactive", icon: UserX },
 ];
 
 function getInitials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
-function getRoleBadge(role: string) {
+function RoleBadge({ role, t }: { role: string; t: (key: string) => string }) {
   switch (role) {
     case "OWNER":
       return (
         <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
-          Owner
+          {t("owner")}
         </Badge>
       );
     case "ADMIN":
       return (
         <Badge className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-          Admin
+          {t("admin")}
         </Badge>
       );
     case "MANAGER":
       return (
         <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">
-          Manager
+          {t("manager")}
         </Badge>
       );
     default:
-      return <Badge variant="secondary">Mitarbeiter</Badge>;
+      return <Badge variant="secondary">{t("employee")}</Badge>;
   }
 }
 
 export function EmployeeList() {
+  const t = useTranslations("employees");
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [search, setSearch] = useState("");
   const router = useRouter();
@@ -113,7 +115,6 @@ export function EmployeeList() {
   const queryParams = new URLSearchParams();
   if (search) queryParams.set("search", search);
 
-  // Map tab to API params
   if (activeTab === "admin") queryParams.set("role", "ADMIN");
   if (activeTab === "manager") queryParams.set("role", "MANAGER");
   if (activeTab === "not_activated") queryParams.set("status", "not_activated");
@@ -124,19 +125,18 @@ export function EmployeeList() {
     queryKey: ["employees", activeTab, search],
     queryFn: async () => {
       const res = await fetch(`/api/employees?${queryParams.toString()}`);
-      if (!res.ok) throw new Error("Fehler beim Laden der Mitarbeiter");
+      if (!res.ok) throw new Error(t("error"));
       return res.json();
     },
   });
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Mitarbeiter</h1>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Verwalte dein Team und weise Rollen zu
+            {t("listSubtitle")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -146,26 +146,25 @@ export function EmployeeList() {
             onClick={() => router.push("/employees/absences")}
           >
             <CalendarDays className="size-4" />
-            <span className="hidden sm:inline">Abwesenheiten</span>
+            <span className="hidden sm:inline">{t("absences")}</span>
           </Button>
           {isAdmin && <EmployeeForm />}
         </div>
       </div>
 
-      {/* Search + Filter Tabs */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Suche nach Name oder E-Mail..."
+            placeholder={t("searchPlaceholder")}
             className="pl-9"
           />
         </div>
 
         <div className="flex flex-wrap gap-1">
-          {tabs.map((tab) => {
+          {tabConfig.map((tab) => {
             const Icon = tab.icon;
             const count = data?.counts?.[tab.key] ?? 0;
             const active = activeTab === tab.key;
@@ -181,7 +180,7 @@ export function EmployeeList() {
                 )}
               >
                 <Icon className="size-3.5" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="hidden sm:inline">{t(`filterTabs.${tab.tKey}`)}</span>
                 <span className="tabular-nums text-xs opacity-70">
                   ({count})
                 </span>
@@ -191,40 +190,36 @@ export function EmployeeList() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <Card className="p-6 text-center text-destructive">
-          Fehler beim Laden der Mitarbeiter. Bitte versuche es erneut.
+          {t("error")}
         </Card>
       )}
 
-      {/* Loading */}
       {isLoading && <EmployeeListSkeleton />}
 
-      {/* Empty state */}
       {!isLoading && !error && data?.members?.length === 0 && (
         <Card className="flex flex-col items-center justify-center p-12 text-center">
           <Users className="size-12 text-muted-foreground/50 mb-3" />
-          <p className="text-lg font-medium">Keine Mitarbeiter gefunden</p>
+          <p className="text-lg font-medium">{t("emptyState.noEmployees")}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {search
-              ? "Versuche eine andere Suche."
-              : "Lege deinen ersten Mitarbeiter an."}
+              ? t("emptyState.tryDifferentSearch")
+              : t("emptyState.addFirst")}
           </p>
         </Card>
       )}
 
-      {/* Desktop Table */}
       {!isLoading && !error && data?.members && data.members.length > 0 && (
         <>
           <Card className="hidden md:block overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>E-Mail</TableHead>
-                  <TableHead>Rolle</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("tableHeaders.name")}</TableHead>
+                  <TableHead>{t("tableHeaders.email")}</TableHead>
+                  <TableHead>{t("tableHeaders.role")}</TableHead>
+                  <TableHead>{t("tableHeaders.status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -262,24 +257,26 @@ export function EmployeeList() {
                     <TableCell className="text-muted-foreground">
                       {emp.user.email}
                     </TableCell>
-                    <TableCell>{getRoleBadge(emp.role)}</TableCell>
+                    <TableCell>
+                      <RoleBadge role={emp.role} t={t} />
+                    </TableCell>
                     <TableCell>
                       {!emp.isActive ? (
-                        <Badge variant="destructive">Inaktiv</Badge>
+                        <Badge variant="destructive">{t("status.inactive")}</Badge>
                       ) : !emp.isActivated ? (
                         <Badge
                           variant="outline"
                           className="border-amber-500 text-amber-600"
                         >
                           <AlertTriangle className="size-3" />
-                          Nicht freigeschaltet
+                          {t("status.notActivated")}
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
                           className="border-emerald-500 text-emerald-600"
                         >
-                          Aktiv
+                          {t("status.active")}
                         </Badge>
                       )}
                     </TableCell>
@@ -289,7 +286,6 @@ export function EmployeeList() {
             </Table>
           </Card>
 
-          {/* Mobile Cards */}
           <div className="space-y-2 md:hidden">
             {data.members.map((emp) => (
               <Card
@@ -311,7 +307,7 @@ export function EmployeeList() {
                       <span className="truncate font-medium">
                         {emp.user.lastName}, {emp.user.firstName}
                       </span>
-                      {getRoleBadge(emp.role)}
+                      <RoleBadge role={emp.role} t={t} />
                     </div>
                     <div className="text-sm text-muted-foreground truncate">
                       {emp.user.email}
@@ -319,7 +315,7 @@ export function EmployeeList() {
                   </div>
                   <div>
                     {!emp.isActive ? (
-                      <Badge variant="destructive">Inaktiv</Badge>
+                      <Badge variant="destructive">{t("status.inactive")}</Badge>
                     ) : !emp.isActivated ? (
                       <AlertTriangle className="size-4 text-amber-500" />
                     ) : null}
