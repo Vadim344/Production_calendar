@@ -193,6 +193,8 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
   const queryClient = useQueryClient();
   const { data: currentMember } = useCurrentMember();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [resetPasswordValue, setResetPasswordValue] = useState("");
   const [noteText, setNoteText] = useState("");
 
   const isAdmin =
@@ -289,6 +291,30 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
       toast.success("Mitarbeiter deaktiviert");
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       router.push("/employees");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  // Reset password mutation
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (newPassword: string) => {
+      const res = await fetch(`/api/admin/users/${memberId}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ newPassword }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Fehler beim Zuruecksetzen");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Passwort zurueckgesetzt");
+      setResetPasswordOpen(false);
+      setResetPasswordValue("");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -393,6 +419,11 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
               <Button variant="outline">Aktionen</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {isAdmin && (
+                <DropdownMenuItem onClick={() => setResetPasswordOpen(true)}>
+                  Passwort zuruecksetzen
+                </DropdownMenuItem>
+              )}
               {canDelete && employee.isActive && (
                 <DropdownMenuItem
                   variant="destructive"
@@ -683,6 +714,47 @@ export function EmployeeDetail({ memberId }: { memberId: string }) {
                 <Loader2 className="size-4 animate-spin" />
               )}
               Deaktivieren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetPasswordOpen} onOpenChange={(o) => { if (!o) setResetPasswordValue(""); setResetPasswordOpen(o); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Passwort zuruecksetzen</DialogTitle>
+            <DialogDescription>
+              Gib ein neues Passwort fuer {employee.user.firstName} {employee.user.lastName} ein.
+              Der Mitarbeiter wird beim naechsten Login aufgefordert, das Passwort zu aendern.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Input
+              type="password"
+              placeholder="Neues Passwort (mind. 6 Zeichen)"
+              value={resetPasswordValue}
+              onChange={(e) => setResetPasswordValue(e.target.value)}
+              minLength={6}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setResetPasswordOpen(false); setResetPasswordValue(""); }}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={() => {
+                if (resetPasswordValue.length >= 6) {
+                  resetPasswordMutation.mutate(resetPasswordValue);
+                }
+              }}
+              disabled={resetPasswordValue.length < 6 || resetPasswordMutation.isPending}
+            >
+              {resetPasswordMutation.isPending && (
+                <Loader2 className="size-4 animate-spin" />
+              )}
+              Passwort speichern
             </Button>
           </DialogFooter>
         </DialogContent>

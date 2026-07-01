@@ -23,6 +23,10 @@ export default async function middleware(req) {
   if (!isPublic) {
     const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET, secureCookie: true });
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
+
+    if (token.mustChangePassword && pathname !== "/change-password") {
+      return NextResponse.redirect(new URL("/change-password", req.url));
+    }
   }
 
   const locale = getLocale(req);

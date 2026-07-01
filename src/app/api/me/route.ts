@@ -36,5 +36,6 @@ export async function GET() {
     organizationId: member.organization.id,
     organizationName: member.organization.name,
     user: member.user,
+    mustChangePassword: session.user.mustChangePassword ?? false,
   });
 }

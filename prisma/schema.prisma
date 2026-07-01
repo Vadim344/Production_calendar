@@ -7,31 +7,32 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  passwordHash  String?
-  firstName     String
-  lastName      String
-  nickname      String?
-  phone         String?
-  profileImage  String?
-  locale        String    @default("de")
-  emailVerified DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  passwordHash        String?
+  firstName           String
+  lastName            String
+  nickname            String?
+  phone               String?
+  profileImage        String?
+  locale              String    @default("de")
+  emailVerified       DateTime?
+  mustChangePassword  Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  memberships       OrganizationMember[]
-  sentMessages      Message[]            @relation("sender")
-  messageRecipients MessageRecipient[]
-  notes             EmployeeNote[]       @relation("subject")
-  authoredNotes     EmployeeNote[]       @relation("author")
-  bookings          Booking[]
-  timeRecords       TimeRecord[]
-  absences          Absence[]
-  modRequests       ModRequest[]
-  liveLogs          LiveLog[]
-  topicPosts        TopicPost[]
-  uploadedFiles     PortalFile[]
+  memberships         OrganizationMember[]
+  sentMessages        Message[]            @relation("sender")
+  messageRecipients   MessageRecipient[]
+  notes               EmployeeNote[]       @relation("subject")
+  authoredNotes       EmployeeNote[]       @relation("author")
+  bookings            Booking[]
+  timeRecords         TimeRecord[]
+  absences            Absence[]
+  modRequests         ModRequest[]
+  liveLogs            LiveLog[]
+  topicPosts          TopicPost[]
+  uploadedFiles       PortalFile[]
 
   @@map("users")
 }
