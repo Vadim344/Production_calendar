@@ -75,7 +75,6 @@ type TimeResponse = {
 const DAY_NAMES_SHORT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 function getInitials(firstName: string, lastName: string) {
-  const locale = useLocale();
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 }
 
@@ -120,6 +119,7 @@ function getRecordTypeIcon(type: TimeRecord["type"]) {
 export function TimeList() {
   const queryClient = useQueryClient();
   const { data: currentMember } = useCurrentMember();
+  const locale = useLocale();
   const isManager =
     currentMember?.role === "OWNER" ||
     currentMember?.role === "ADMIN" ||
